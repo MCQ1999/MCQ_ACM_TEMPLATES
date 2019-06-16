@@ -1,0 +1,38 @@
+洛谷P1004/P1006
+题意：某人从图的左上角的A点出发，可以向下行走，也可以向右走，直到到达右下角的B点。在走过的路上，他可以取走方格中的数（取走后的方格中将变为数字0）。此人从A点到B点共走两次，试找出2条这样的路径，使得取得的数之和为最大。
+输入格式：
+输入的第一行为一个整数N（表示N×N的方格图），接下来的每行有三个整数，前两个表示位置，第三个数为该位置上所放的数。一行单独的0表示输入结束。
+输出格式：
+只需输出一个整数，表示2条路径上取得的最大的和。
+思路：设dp[i][j][k][l]表示第一个人走到(i,j)的最大值和第二个人走到(k,l)的最大值。
+#include<bits/stdc++.h>
+using namespace std;
+int g[10][10],dp[10][10][10][10];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    int a,b,c;
+    while(cin>>a>>b>>c&&a+b+c)
+    {
+        g[a][b]=c;
+    }
+    for(int i=1; i<=n; i++)
+    {
+        for(int j=1; j<=n; j++)
+        {
+            for(int k=1; k<=n; k++)
+            {
+                for(int l=1; l<=n; l++)
+                {
+                    dp[i][j][k][l]=max(dp[i-1][j][k-1][l],max(max(dp[i-1][j][k][l-1],dp[i][j-1][k-1][l]),dp[i][j-1][k][l-1]))+g[i][j]+g[k][l];
+                    if(i==k&&j==l)
+                        dp[i][j][k][l]-=g[i][j];
+                }
+            }
+        }
+    }
+    cout<<dp[n][n][n][n]<<endl;
+    return 0;
+}

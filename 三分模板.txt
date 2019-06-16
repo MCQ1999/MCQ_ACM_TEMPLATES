@@ -1,0 +1,37 @@
+#include <cstdio>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+double y;
+double val(double x)
+{
+    return 6*x*x*x*x*x*x*x+8*x*x*x*x*x*x+7*x*x*x+5*x*x-y*x;
+}
+double solve(double l,double r)
+{
+    double eps = 1e-7;
+    while(l + eps < r)
+    {
+        double lmid = l + (r-l)/3,rmid = r - (r-l)/3;
+        if(val(lmid) < val(rmid))
+        {
+            r = rmid;
+        }
+        else
+        {
+            l = lmid;
+        }
+    }
+    return val(l);
+}
+int main()
+{
+    int t;
+    cin>>t;
+    while(t--)
+    {
+        cin>>y;
+        printf("%.4f\n", solve(0,100.0));
+    }
+    return 0;
+}

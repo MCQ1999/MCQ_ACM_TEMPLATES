@@ -1,0 +1,42 @@
+1.求大矩形能不能放下小矩形（边界不能重合）
+输入的时候很玄学，在牛客上要用%d，在hdu上要用%lf
+#include <iostream>
+#include <cstdio>
+#include <cmath>
+using namespace std;
+int a,b,x,y;
+bool judge()
+{
+    if(a*b<=x*y)return false;
+    if(a>x&&b>y)return true;
+    if(b<=y)return false;
+    double angle1,angle2,angle3,length,djx;
+    djx=sqrt(x*x+y*y);
+    angle1=acos(y*1.0/djx);
+    angle2=acos(b*1.0/djx);
+    angle3=angle1-angle2;
+    length=djx*sin(angle2)+2*y*sin(angle3);
+    if(length<a)return true;
+    else return false;
+}
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d%d%d%d",&a,&b,&x,&y);
+        if(b>a)
+        {
+            swap(a,b);
+        }
+        if(y>x)
+        {
+            swap(x,y);
+        }
+        if(judge())printf("Escape is possible.\n");
+        else printf("Box cannot be dropped.\n");
+    }
+    return 0;
+}
+

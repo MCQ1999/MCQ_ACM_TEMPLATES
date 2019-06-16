@@ -1,0 +1,164 @@
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+#define M 1024*1024
+using namespace std;
+int t,rt=0,top=0,l=0,len,ch[2*M+10][2],pre[2*M+10],siz[2*M+10],p[2*M+10];
+char op[20],in[2*M+10],val[2*M+10];
+bool flag;
+ 
+void newnode(int &x,char c,int f)
+{
+  x=++top;
+  ch[x][0]=ch[x][1]=0;pre[x]=f;
+  val[x]=c;siz[x]=1;p[x]=0;
+}
+ 
+void pushdown(int x) //标记下放
+{
+  if (p[x])
+  {
+    p[ch[x][0]]=!p[ch[x][0]];
+	p[ch[x][1]]=!p[ch[x][1]];
+	swap(ch[x][0],ch[x][1]);
+	p[x]=0;
+  }
+}
+ 
+void pushup(int x)
+{
+  siz[x]=siz[ch[x][0]]+siz[ch[x][1]]+1;
+}
+ 
+void buildtree(int &x,int l,int r,int f)
+{
+  if (l>r) return;
+  int mid=(l+r)>>1;
+  newnode(x,in[mid],f);
+  pushdown(x);
+  buildtree(ch[x][0],l,mid-1,x);
+  buildtree(ch[x][1],mid+1,r,x);
+  pushup(x);
+}
+ 
+void read(int len)
+{
+  int i=0;
+  while(i<len)
+  {
+    scanf("%c",&in[i+1]);
+	if (in[i+1]!='\n') i++;
+  }
+}
+ 
+void rotate(int x,bool f)
+{
+  int y=pre[x];
+  pushdown(y);pushdown(x);
+  ch[y][!f]=ch[x][f];
+  pre[ch[x][f]]=y;
+  ch[x][f]=y;
+  if (pre[y]) ch[pre[y]][ch[pre[y]][1]==y]=x;
+  pre[x]=pre[y];pre[y]=x;
+  pushup(y);
+}
+ 
+void Splay(int x,int goal)
+{
+  pushdown(x);
+  while(pre[x]!=goal)
+  {
+    pushdown(pre[pre[x]]);pushdown(pre[x]);pushdown(x);
+    if (pre[pre[x]]==goal) rotate(x,ch[pre[x]][0]==x);
+	else
+	{
+	  int y=pre[x],z=pre[y];
+	  bool f=(ch[z][1]==y);
+	  if (ch[y][f]==x) rotate(y,!f),rotate(x,!f);
+	  else rotate(x,f),rotate(x,!f);
+	}
+  }
+  pushup(x);
+  if (goal==0) rt=x;
+}
+ 
+void rotateto(int k,int goal)
+{
+  int x=rt;
+  pushdown(x);
+  while(siz[ch[x][0]]+1!=k)
+  {
+    if (siz[ch[x][0]]+1<k) {k-=siz[ch[x][0]]+1;x=ch[x][1];}
+	else x=ch[x][0];
+	pushdown(x);
+  }
+  Splay(x,goal);
+}
+ 
+void insert(int l,int len)
+{
+  rotateto(l+1,0);
+  rotateto(l+2,rt);
+  buildtree(ch[ch[rt][1]][0],1,len,ch[rt][1]);
+  pushup(ch[rt][1]);pushup(rt);
+}
+ 
+void del(int l,int len)
+{
+  rotateto(l+1,0);
+  rotateto(l+len+2,rt);
+  ch[ch[rt][1]][0]=0;
+  pushup(ch[rt][1]);pushup(rt);
+}
+ 
+void reverse(int l,int len) //翻转第l个字符后面的len个字符组成的字符串
+{
+  rotateto(l+1,0);
+  rotateto(l+len+2,rt);
+  p[ch[ch[rt][1]][0]]=!p[ch[ch[rt][1]][0]];
+  pushup(ch[rt][1]);pushup(rt);
+}
+ 
+void getn(int l)
+{
+  rotateto(l+2,0);
+  if (flag) printf("\n");
+  else flag=1;
+  printf("%c",val[rt]);
+}
+ 
+int main()
+{
+  scanf("%d",&t);
+  ch[0][0]=ch[0][1]=pre[0]=siz[0]=flag=0;
+  newnode(rt,'\n',0);
+  newnode(ch[rt][1],'\n',rt);
+  for(int i=1;i<=t;i++)
+  {
+    scanf("%s",op);
+	if (op[0]=='P') l--;
+	if (op[0]=='N') l++;
+	if (op[0]=='M') scanf("%d",&l);
+    if (op[0]=='I')
+	{
+	  scanf("%d",&len);
+	  read(len);
+	  insert(l,len);
+	}
+	if (op[0]=='D')
+	{
+	  scanf("%d",&len);
+	  del(l,len);
+	}	
+	if (op[0]=='R')
+	{
+	  scanf("%d",&len);
+	  reverse(l,len);
+	}
+	if (op[0]=='G') getn(l);
+  }
+  
+  return 0;
+}

@@ -1,0 +1,35 @@
+//https://ac.nowcoder.com/acm/contest/280/C
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=200005;
+const int mod=1e9+7;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+ll gcd(ll a,ll b){return b==0?a:gcd(b,a%b);}
+ll g[maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    ll a,b,cnt=0;
+    cin>>a>>b;
+    ll gab=gcd(a,b);
+    for(int i=1;i<=sqrt(gab);i++)
+    {
+        if(a%i==0&&b%i==0)
+        {
+            if(i*i==gab)
+                g[cnt++]=i;
+            else
+                g[cnt++]=i,g[cnt++]=gab/i;
+        }
+    }
+    sort(g,g+cnt);
+    for(int i=0;i<cnt;i++)
+    {
+        cout<<g[i]<<" ";
+    }
+    return 0;
+}

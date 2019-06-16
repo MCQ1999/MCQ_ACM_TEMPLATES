@@ -1,0 +1,55 @@
+/*洛谷p1018
+题意：长度为n的数字串插入k个乘号使乘积最大
+思路：设dp[i][j]表示前i个数插入j个乘号的乘积最大值。
+预处理出用t枚举0到i-1后面插乘号，dp[i][j]=max(dp[t][j-1]*a[t+1][i],dp[i][j])*/
+import java.math.*;
+import java.util.*;
+
+public class Main {
+	static BigInteger a[][] = new BigInteger[45][45];
+	static BigInteger dp[][] = new BigInteger[45][45];
+
+	public static BigInteger max(BigInteger a, BigInteger b) {
+		return a.compareTo(b) < 0 ? b : a;
+	}
+
+	public static void main(String[] args) {
+		int n, k;
+		Scanner cin = new Scanner(System.in);
+		n = cin.nextInt();
+		k = cin.nextInt();
+		cin.nextLine();// 注意！！！
+		String s = cin.nextLine();
+		for (int i = 0; i < n; i++) {
+			Arrays.fill(dp[i], BigInteger.ZERO);
+			Arrays.fill(a[i], BigInteger.ZERO);
+		}
+		int l = s.length();
+		for (int i = 0; i < l; i++) {
+			for (int j = i; j < l; j++) {
+				BigInteger sum = BigInteger.ZERO;
+				for (int m = i; m <= j; m++) {
+					sum = sum.multiply(BigInteger.valueOf(10)).add(
+							BigInteger.valueOf(s.charAt(m) - '0'));
+				}
+				a[i][j] = sum;
+			}
+		}
+		for (int i = 0; i < n; i++) {
+			dp[i][0] = a[0][i];
+		}
+		for (int i = 0; i < n; i++) {
+			for (int j = 1; j <= k; j++) {
+				if (j - 1 >= i)
+					break;
+				for (int t = 0; t < i; t++) {
+					dp[i][j] = max(dp[t][j - 1].multiply(a[t + 1][i]), dp[i][j]);
+				}
+			}
+		}
+		System.out.println(dp[n - 1][k]);
+	}
+}
+/*
+ * 4 2 1231
+ */

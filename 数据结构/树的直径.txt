@@ -1,0 +1,71 @@
+题意：有一颗n个结点的带权的无向树, 在s结点放两个机器人, 这两个机器人会把树的每条边都走一遍, 但是最后机器人不要求回到出发点. 问你两个机器人走的路总长之和的最小值是多少?
+思路：考虑从一个结点遍历整个树再回到原点需要把每个边计算两遍，这里机器人不用回到出发点，所以两个机器人到达的点越远越好。让两个机器人在初始位置在直径上背道而驰，这样最优解就是所有边*2-直径，因为直径只走了一次，而其他边必走两遍。
+#include<queue>
+#include<vector>
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#define ll long long
+using namespace std;
+struct node
+{
+	ll to,val;
+};
+const int N=100010;
+vector<node> g[N];
+ll vis[N],dis[N],ans;
+ll bfs(ll x)
+{
+    memset(dis,0,sizeof(dis));
+    memset(vis,0,sizeof(vis));
+    queue<ll> q;
+    q.push(x);
+    vis[x]=1;
+    ll point=0;
+    while(!q.empty())
+    {
+        ll f=q.front();
+        q.pop();
+        if(dis[f]>ans)
+        {
+            ans=dis[f];
+            point=f;
+        }
+        int sz=g[f].size();
+        for(int i=0;i<sz;i++)
+        {
+            node temp=g[f][i];
+            if(vis[temp.to]==0)
+            {
+                vis[temp.to]=1;
+                dis[temp.to]=dis[f]+temp.val;
+                q.push(temp.to);
+            }
+        }
+    }
+    return point;
+}
+
+int main()
+{
+    ll n,m;
+    while(scanf("%lld %lld",&n,&m)==2)
+    {
+        ll sum=0;
+        for(int i=1;i<=n-1;i++)
+        {
+            ll u,v,w;
+            scanf("%lld %lld %lld",&u,&v,&w);
+            g[u].push_back({v,w});
+            g[v].push_back({u,w});
+            sum+=w;
+        }
+        ans=0;
+        ll point=bfs(m);
+        ans=0;
+        bfs(point);
+        printf("%d\n",(ll)(sum*2-ans));
+        for(int i=1;i<=n;i++) g[i].clear();
+    }
+}

@@ -1,0 +1,128 @@
+//BZOJ 2588
+题意：给定一棵N个节点的树，每个点有一个权值，对于M个询问(u,v,k)，你需要回答u xor lastans和v这两个节点间第K小的点权。其中lastans是上一个询问的答案，初始为0，即第一个询问的u是明文。
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#define mid (l+r)/2
+using namespace std;
+
+const int N = 2e5+10,M=N*20;
+int n, q, sz, num = 0;
+int a[N], b[N], T[N];
+int sum[M], L[M], R[M];
+int tot=0,cnt=0;
+int head[N],nxt[N],to[N];
+int fir[N],order[N],depth[N];
+int f[20][N],rec[20][N],pre[N];
+void addedge(int x,int y)
+{
+    cnt++;
+    nxt[cnt]=head[x];
+    head[x]=cnt;
+    to[cnt]=y;
+}
+inline int update(int pre, int l, int r, int x)
+{
+    int rt = ++ num;
+    L[rt] = L[pre];
+    R[rt] = R[pre];
+    sum[rt] = sum[pre]+1;
+    if (l < r)
+    {
+        if (x <= mid) L[rt] = update(L[pre], l, mid, x);
+        else R[rt] = update(R[pre], mid+1, r, x);
+    }
+    return rt;
+}
+
+void dfs(int u,int dep)//dfs处理出三个数组
+{
+    fir[u]=++tot,order[tot]=u,depth[tot]=dep;
+    for(int i=head[u];i!=-1;i=nxt[i])
+    {
+        int v=to[i];
+        if(!fir[v])
+        {
+            T[v]=update(T[u],1,sz,lower_bound(b+1,b+1+sz,a[v])-b);
+            pre[v]=u;
+            dfs(v,dep+1);
+            order[++tot]=u,depth[tot]=dep;
+        }
+    }
+}
+int lca(int l,int r)
+{
+    l=fir[l],r=fir[r];
+    if(l>r) swap(l,r);
+    int k=0;
+    while((1<<k)<=r-l+1) k++;
+    k--;
+    if(f[k][l]<f[k][r-(1<<k)+1]) return rec[k][l];
+    else return rec[k][r-(1<<k)+1];
+}
+inline int build(int l, int r)
+{
+    int rt = ++ num;
+    sum[rt] = 0;
+    if (l < r)
+    {
+        L[rt] = build(l, mid);
+        R[rt] = build(mid+1, r);
+    }
+    return rt;
+}
+
+inline int query(int u, int v, int l, int r, int k,int fa,int ffa)
+{
+    if (l >= r) return l;
+    int x = sum[L[v]]+sum[L[u]]-sum[L[fa]]-sum[L[ffa]];
+    if (x >= k) return query(L[u], L[v], l, mid, k,L[fa],L[ffa]);
+    else return query(R[u], R[v], mid+1, r, k-x,R[fa],R[ffa]);
+}
+int main()
+{
+    memset(head,-1,sizeof(head));
+    scanf("%d%d", &n, &q);
+    for (int i = 1; i <= n; i ++)
+    {
+        scanf("%d", &a[i]);
+        b[i] = a[i];
+    }
+    for(int i=1;i<n;i++)
+    {
+        int u,v;
+        scanf("%d%d",&u,&v);
+        addedge(u,v);
+        addedge(v,u);
+    }
+    sort(b+1, b+1+n);
+    sz = unique(b+1, b+1+n)-b-1;
+    T[0] = build(1, sz);
+    T[1] = update(T[0],1,sz,lower_bound(b+1,b+1+sz,a[1])-b);
+    pre[1]=0;
+    dfs(1,1);
+    for(int i=1;i<=tot;i++)
+        f[0][i]=depth[i],rec[0][i]=order[i];
+    for(int i=1;i<=log(tot)/log(2);i++)
+        for(int j=1;j<=tot-(1<<i)+1;j++)
+        {
+            if(f[i-1][j]<f[i-1][j+(1<<(i-1))])
+                f[i][j]=f[i-1][j],rec[i][j]=rec[i-1][j];
+            else f[i][j]=f[i-1][j+(1<<(i-1))],rec[i][j]=rec[i-1][j+(1<<(i-1))];
+        }
+    int lst=0;
+    while (q --)
+    {
+        int x, y, z;
+        scanf("%d%d%d", &x, &y, &z);
+        x^=lst;
+        int fa=lca(x,y);
+        int t = query(T[x], T[y], 1,sz,z ,T[fa],T[pre[fa]]);
+        lst=b[t];
+        printf("%d", lst);
+        if(q)
+            printf("\n");
+    }
+    return 0;
+}

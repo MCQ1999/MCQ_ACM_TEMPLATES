@@ -1,0 +1,74 @@
+//<邻接表+堆优化+防重边 O((E+V)logV)>  POJ2387模板题
+#include <cstdio>
+#include <iostream>
+#include <cstring>
+#include <cctype>
+#include <cstdlib>
+#include <algorithm>
+#include <vector>
+#include <queue>
+#include <stack>
+#include <set>
+#include <map>
+#include <list>
+using namespace std;
+const int maxn=500010;
+const int INF=0x3f3f3f3f;
+struct node
+{
+    int p,w;
+    node(int a,int b)
+    {
+        p=a;
+        w=b;
+    }
+    friend bool operator<(node a,node b) //权值小的先出队
+    {
+        if(a.w!=b.w) return a.w>b.w;
+        return a.p>b.p;
+    }
+};
+vector <node> eg[maxn];
+int dis[maxn],n;
+void addedge(int u,int v,int w)
+{
+    eg[u].push_back(node(v,w));
+}
+void Dijkstra(int now)
+{
+    for(int i=0; i<=n; i++) dis[i]=INF;
+    dis[now]=0;
+    priority_queue <node> pq;
+    pq.push(node(now,dis[now]));
+    while(!pq.empty())
+    {
+        node f=pq.top();
+        pq.pop();
+        for(int i=0; i<eg[f.p].size(); i++)
+        {
+            node t=eg[f.p][i];
+            if(dis[t.p]>t.w+f.w)
+            {
+                dis[t.p]=t.w+f.w;
+                pq.push(node(t.p,dis[t.p]));
+            }
+        }
+    }
+
+}
+int main()
+{
+    int u,v,m,w;
+    while(scanf("%d%d",&m,&n)!=EOF)
+    {
+        for(int i=0; i<=n; i++) eg[i].clear();
+        while(m--)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            addedge(u,v,w);
+        }
+        Dijkstra(1);
+        printf("%d\n",dis[n]);
+    }
+    return 0;
+}

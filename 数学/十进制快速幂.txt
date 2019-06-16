@@ -1,0 +1,28 @@
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=1e7+10;
+ll a, mod;
+char ss[maxn];
+ll qpow ( ll a, ll b, ll mod )
+{
+    ll rt;
+    for (rt = 1; b; b >>= 1, a = a * a % mod)
+        if (b & 1)
+            rt = rt * a % mod;
+    return rt;
+}
+int main ()
+{
+    scanf ("%lld%lld%s", &a, &mod,ss);
+    int len = strlen(ss);
+    reverse(ss,ss+len);
+    ll base = a;
+    ll cur = 1;
+    for (int i = 0; i < len; i++)
+    {
+        cur = cur * qpow (base, ss[i] - '0', mod) % mod;
+        base = qpow (base, 10, mod) % mod;
+    }
+    printf ("%lld", cur);
+}

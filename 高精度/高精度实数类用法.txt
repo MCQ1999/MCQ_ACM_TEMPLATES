@@ -1,0 +1,30 @@
+1.除法保留小数
+例如2.35
+1.BigDecimal.ROUND_DOWN 2.3
+2.BigDecimal.ROUND_UP 2.4
+3.BigDecimal.ROUND_HALF_UP 2.4
+4.BigDecimal.ROUND_HALF_DOWN 2.3 (3和4都是四舍五入,只有0.5时与ROUND_HALF_UP不同）
+import java.math.*;
+import java.util.*;
+public class Main {
+	public static void main(String[] args) {
+		int t;
+		Scanner cin=new Scanner (System.in);
+		while(cin.hasNext())
+		{
+			BigDecimal a,b;
+			int c;
+			String s;
+			a=cin.nextBigDecimal();
+			b=cin.nextBigDecimal();
+			c=cin.nextInt();
+			s=cin.next();
+			if(s.compareTo("Xiang")==0)
+			{
+				System.out.println(a.divide(b,c,BigDecimal.ROUND_FLOOR));//c是保留小数几位
+			}
+			else 
+				System.out.println(a.divide(b,c,BigDecimal.ROUND_HALF_UP));
+		}
+	}
+}

@@ -1,0 +1,377 @@
+线性基概念：
+//1.求一个数能不能由一群数异或得到
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=200005;
+const int maxbit=63;
+ll p[maxbit],a[maxn];//p储存第i位为1的数
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    for(int i=1;i<=n;i++)
+        cin>>a[i];
+    for(int i=1;i<=n;i++)//求线性基
+    {
+        for(int j=maxbit-1;j>=0;j--)
+        {
+            if((a[i]>>j)&1)//如果一个数的第j位为1
+            {
+                if(p[j]==0)//如果第j位还未赋值
+                {
+                    p[j]=a[i];break;
+                }
+                else
+                {
+                    a[i]^=p[j];//否则就异或这个已存在的p[j]使得a的第j位变成0
+                }
+            }
+        }
+    }
+    int num=0;//线性基的大小
+    for(int i=maxbit-1;i>=0;i--)
+    {
+        if(p[i])
+        {
+            num++;
+        }
+    }
+    int k;
+    while(cin>>k)
+    {
+        if(k==0)
+        {
+            if(n==num)//每一位为1的只有一个，无法异或使得每一位都为0
+            {
+                cout<<"false"<<endl;
+            }
+            else
+            {
+                cout<<"true"<<endl;
+            }
+        }
+        else
+        {
+            bool flag=0;
+            for(int j=maxbit-1;j>=0;j--)
+            {
+                if((k>>j)&1)//尝试把k异或成0
+                {
+                    k^=p[j];
+                }
+                if(k==0)
+                {
+                    flag=1;break;
+                }
+            }
+            if(flag)
+            {
+                cout<<"true"<<endl;
+            }
+            else
+            {
+                cout<<"false"<<endl;
+            }
+        }
+    }
+    return 0;
+}
+//2.求由一群数异或得到的所有数第k小的数
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=200005;
+const int maxbit=63;
+ll a[maxn],p[maxbit],q[maxbit];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int t,cas=0;
+    cin>>t;
+    while(t--)
+    {
+        memset(p,0,sizeof(p));
+        memset(q,0,sizeof(q));
+        cout<<"Case #"<<++cas<<":"<<endl;
+        int n;
+        cin>>n;
+        for(int i=1; i<=n; i++)
+        {
+            cin>>a[i];
+        }
+        for(int i=1; i<=n; i++)
+        {
+            for(int j=maxbit-1; j>=0; j--)
+            {
+                if((a[i]>>j)&1)//如果第j位为1
+                {
+                    if(p[j]==0)
+                    {
+                        p[j]=a[i];
+                        break;
+                    }
+                    else
+                    {
+                        a[i]^=p[j];
+                    }
+                }
+            }
+        }
+        int num=0;
+        for(int i=0; i<maxbit; i++) //把高位的第i位也是1的那一位异或成0
+        {
+            for(int j=i+1; j<maxbit; j++)
+            {
+                if((p[j]>>i)&1)
+                {
+                    p[j]^=p[i];
+                }
+            }
+        }
+        for(int i=0; i<maxbit; i++) //从低到高放到新的数组q中
+        {
+            if(p[i])
+            {
+                q[num++]=p[i];
+            }
+        }
+        int Q;
+        cin>>Q;
+        while(Q--)
+        {
+            ll k;
+            cin>>k;
+            if(num!=n)//可以异或得0
+            {
+                k--;
+            }
+            if(k>=(1LL<<num))//超出能表示的个数，不包含0能表示2^num-1个数
+            {
+                cout<<-1<<endl;
+            }
+            else
+            {
+                ll ans=0;
+                for(int i=0; i<maxbit; i++)
+                {
+                    if((k>>i)&1)
+                    {
+                        ans^=q[i];
+                    }
+                }
+                cout<<ans<<endl;
+            }
+        }
+    }
+    return 0;
+}
+//3.一群数任选使异或值最大：从高位到低位扫描。如果当前ans^p[i]能使得答案变大，那么就异或。最后得到的ans就是线性基异或集合中的最大值。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=200005;
+const int maxbit=63;
+ll p[maxbit],a[maxn];//p储存第i位为1的数
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    for(int i=1;i<=n;i++)
+        cin>>a[i];
+    for(int i=1;i<=n;i++)//求线性基
+    {
+        for(int j=maxbit-1;j>=0;j--)
+        {
+            if((a[i]>>j)&1)//如果一个数的第j位为1
+            {
+                if(p[j]==0)//如果第j位还未赋值
+                {
+                    p[j]=a[i];break;
+                }
+                else
+                {
+                    a[i]^=p[j];//否则就异或这个已存在的p[j]使得a的第j位变成0
+                }
+            }
+        }
+    }
+    ll ans=0;
+    for(int i=maxbit-1;i>=0;i--)
+    {
+        if((ans^p[i])>ans) //注意前面要加上括号，^的优先级比>低
+            ans=ans^p[i];
+    }
+    cout<<ans<<endl;
+    return 0;
+}
+//4.一群数任选使异或值最小：最小值就是线性基中最低位的数。
+//5.在a[i].a异或不为0的情况下，a[i].b的和的最大值:按b从大到小排序，按这个顺序遍历一下a[i].a，如果能插入线性基则ans加上a[i].b。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=200005;
+const int maxbit=63;
+ll p[maxbit];//p储存第i位为1的数
+struct node
+{
+    ll a,v;
+    friend bool operator<(node a,node b)
+    {
+        return a.v>b.v;
+    }
+};
+node a[maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    for(int i=1;i<=n;i++)
+        cin>>a[i].a>>a[i].v;
+    sort(a+1,a+n+1);
+    ll ans=0;
+    for(int i=1;i<=n;i++)//求线性基
+    {
+        for(int j=maxbit-1;j>=0;j--)
+        {
+            if((a[i].a>>j)&1)//如果一个数的第j位为1
+            {
+                if(p[j]==0)//如果第j位还未赋值
+                {
+                    p[j]=a[i].a;break;
+                }
+                else
+                {
+                    a[i].a^=p[j];//否则就异或这个已存在的p[j]使得a的第j位变成0
+                }
+            }
+        }
+        if(a[i].a!=0)
+            ans+=a[i].v;
+    }
+    cout<<ans<<endl;
+    return 0;
+}
+//6.在图中找一条1到n的路径，使边权异或和最大。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=5e5+10;
+const int maxbit=64;
+struct node
+{
+    ll to,val;
+};
+vector<node> g[maxn];
+ll dis[maxn],ans,cir[maxn],sz=0,p[maxbit];
+int vis[maxn];
+void dfs(ll now,ll fa,ll x)
+{
+    dis[now]=x;
+    vis[now]=1;
+    for(int i=0;i<g[now].size();i++)
+    {
+        int to=g[now][i].to;
+        if(to!=fa&&vis[to])
+        {
+            cir[++sz]=dis[now]^dis[to]^g[now][i].val;
+        }
+        else if(!vis[to])
+        {
+            dfs(to,now,x^g[now][i].val);
+        }
+    }
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n,m;
+    cin>>n>>m;
+    for(int i=0;i<m;i++)
+    {
+        ll u,v,w;
+        cin>>u>>v>>w;
+        g[u].push_back({v,w});
+        g[v].push_back({u,w});
+    }
+    dfs(1,0,0);
+    for(int i=1;i<=sz;i++)
+    {
+        for(int j=maxbit-1;j>=0;j--)
+        {
+            if((cir[i]>>j)&1)
+            {
+                if(p[j]==0)
+                {
+                     p[j]=cir[i];break;
+                }
+                else
+                    cir[i]^=p[j];
+            }
+        }
+    }
+    ans=dis[n];
+    for(int i=maxbit-1;i>=0;i--)
+    {
+        ans=max(ans,ans^p[i]);
+    }
+    cout<<ans<<endl;
+    return 0;
+}
+//7.求1到n异或最大和，i能到j当且仅当a[i]>a[j]，花费为^a[j]，初始为a[1]。https://ac.nowcoder.com/acm/problem/22144
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=3005;
+const int maxbit=64;
+int ans,sz=0,p[maxbit];
+int a[maxn],b[maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    for(int i=1; i<=n; i++)
+    {
+        cin>>a[i];
+    }
+    if(a[1]<=a[n])
+    {
+        cout<<-1<<endl;
+        return 0;
+    }
+    ans=a[1]^a[n];
+    for(int i=2; i<n; i++)
+    {
+        if(a[i]<a[1]&&a[i]>a[n])
+        {
+            b[++sz]=a[i];
+        }
+    }
+    for(int i=1; i<=sz; i++)
+    {
+        for(int j=maxbit-1; j>=0; j--)
+        {
+            if((b[i]>>j)&1)
+            {
+                if(p[j]==0)
+                {
+                    p[j]=b[i];
+                    break;
+                }
+                else
+                    b[i]^=p[j];
+            }
+        }
+    }
+    for(int i=maxbit-1; i>=0; i--)
+    {
+        ans=max(ans,ans^p[i]);
+    }
+    cout<<ans<<endl;
+    return 0;
+}
+

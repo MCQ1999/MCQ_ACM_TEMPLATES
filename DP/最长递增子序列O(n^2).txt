@@ -1,0 +1,38 @@
+1.O(n^2)
+dp[i]表示以第i个数结尾的LIS，第i个数可以选也可以不选，如果第i个数大于前i个数，则选，否则不选，所以外层循环i枚举以第i个数结尾，内层循环j枚举0~i的数，如果a[i]>a[j]，就更新dp[i]=max(dp[j]+1,dp[i])
+#include<iostream>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=200005;
+const double eps=1e-8;
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    int a[1005];
+    for(int i=0;i<n;i++)
+    {
+        cin>>a[i];
+    }
+    int dp[1005];
+    for(int i=0;i<n;i++)
+    {
+        dp[i]=1;
+        for(int j=0;j<i;j++)
+        {
+            if(a[i]>a[j])
+            {
+                dp[i]=max(dp[j]+1,dp[i]);
+            }
+        }
+    }
+    int ans=0;
+    for(int i=0;i<n;i++)
+    {
+        ans=max(ans,dp[i]);
+    }
+    cout<<ans<<endl;
+    return 0;
+}

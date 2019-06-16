@@ -1,0 +1,50 @@
+1.
+n的全体正因数之和：∏(pi^(ai+1)-1)/(pi-1)，pi是素数,ai是对应的幂。
+
+2.
+1到n的因子和的和：
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+ll solve(ll n)
+{
+    ll ans=0;
+    ll r;
+    for(ll l=1;l<=n;l=r+1)
+    {
+        r=n/(n/l);
+        ans+=(l+r)*(r-l+1)/2*(n/l);
+    }
+    return ans;
+}
+int main()
+{
+    ll n;
+    while(~scanf("%lld",&n))
+        printf("%lld\n",solve(n));
+    return 0;
+}
+ 
+3.
+1到n的因子个数的和：
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+ll f(ll n)
+{
+    ll ans=0;
+    ll r;
+    for(ll l=1; l<=n; l=r+1)
+    {
+        r=n/(n/l);
+        ans+=n/l*(r-l+1);
+    }
+    return ans;
+}
+int main()
+{
+    ll n;
+    while(~scanf("%lld",&n))
+        printf("%lld\n",f(n));
+    return 0;
+}

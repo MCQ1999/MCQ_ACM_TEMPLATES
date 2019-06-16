@@ -1,0 +1,18 @@
+/*
+block代表每一块有多大，num代表一共有几块，belong[i]代表原序列中第i个元素在第几块，l[i]代表第i块的左端点,r[i]代表第i块的右端点。
+*/
+int build()
+{
+    block = sqrt(n);
+    num = n/block;
+    if(n%block)//除不尽，多出一块
+        num++;
+    for(int i;i<=n;i++)
+        belong[i] = (i-1)/block+1,d[i] = a[i];
+    for(int i=1;i<=num;i++)
+    {
+        l[i] = (i-1)*block+1;
+        r[i] = i*block;
+    }
+    r[num] = n;//后一块的右端点为n
+}

@@ -1,0 +1,104 @@
+//HDU 5919
+题意：给你l、r，但需要用题中给的公式重新求一下l和r，再找到l到r的数，并把每个数在这个区间第一次出现的位置（整个序列的下标）记录一下，最后求这些位置的中位数
+思路：这题需要倒着插入整个序列，插入的值是数对应的下标，这样插就可以保证这个区间从l开始的数都是在这个区间第一次出现的，所以计算一下l到r不同数的个数k，然后在T[l]这棵线段树里找第(k+1)/2小的值（下标），因为T[l]这棵线段树存的每个数是唯一的（ update的时候遇到重复的总是把之前出现的位置-1并在当前位置+1）
+#include<bits/stdc++.h>
+#define mid (l+r)/2
+using namespace std;
+
+const int N = 3e5+100;
+int n, q, sz, num = 0;
+int a[N],T[N];
+int sum[N<<5], L[N<<5], R[N<<5];
+
+inline int build(int l, int r)
+{
+    int rt = ++ num;
+    sum[rt] = 0;
+    if (l < r)
+    {
+        L[rt] = build(l, mid);
+        R[rt] = build(mid+1, r);
+    }
+    return rt;
+}
+
+inline int update(int pre, int l, int r, int x,int d)
+{
+    int rt = ++ num;
+    L[rt] = L[pre];
+    R[rt] = R[pre];
+    sum[rt] = sum[pre]+d;
+    if (l < r)
+    {
+        if (x <= mid) L[rt] = update(L[pre], l, mid, x,d);
+        else R[rt] = update(R[pre], mid+1, r, x,d);
+    }
+    return rt;
+}
+
+inline int query(int u,int l, int r, int k)
+{
+    if (l == r) return sum[u];
+    int ans=0;
+    if (mid >= k) ans=query(L[u], l, mid, k);
+    else ans=sum[L[u]]+query(R[u], mid+1, r, k);
+    return ans;
+}
+inline int query2(int u, int l, int r, int k)
+{
+    if (l >= r) return l;
+    int x = sum[L[u]];
+    if (x >= k) return query2(L[u],l, mid, k);
+    else return query2(R[u],mid+1, r, k-x);
+}
+int ans[N];
+int main()
+{
+    int t,cas=0;
+    scanf("%d",&t);
+    while(t--)
+    {
+        num=0;
+        memset(ans,0,sizeof(ans));
+        scanf("%d%d", &n,&q);
+        for (int i = 1; i <= n; i ++)
+        {
+            scanf("%d", &a[i]);
+        }
+        int mp[N];
+        memset(mp,0,sizeof(mp));
+        T[n+1] = build(0, n);
+        for (int i = n; i >= 1; i --)
+        {
+            if(!mp[a[i]])
+            {
+                T[i] = update(T[i+1],0,n,i,1);
+            }
+            else
+            {
+                int t=update(T[i+1],0,n,mp[a[i]],-1);
+                T[i]=update(t,0,n,i,1);
+            }
+            mp[a[i]]=i;
+        }
+        int i=0;
+        while (q --)
+        {
+            ++i;
+            int x, y;
+            scanf("%d%d", &x, &y);
+            x=(ans[i-1]+x)%n+1;
+            y=(ans[i-1]+y)%n+1;
+            if(x>y)
+                swap(x,y);
+            ans[i]= query(T[x], 0, n, y)-query(T[x],0,n,x-1);
+            ans[i]=(ans[i]+1)/2;
+            ans[i]=query2(T[x],0,n,ans[i]);
+        }
+        printf("Case #%d:",++cas);
+        for(int j=1;j<=i;j++)
+            printf(" %d",ans[j]);
+        puts("");
+    }
+    return 0;
+}

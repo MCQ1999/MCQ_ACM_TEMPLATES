@@ -1,0 +1,71 @@
+1.CodeForces - 1099D（树上贪心+DFS）
+题意：给出一棵有根树，根节点编号为1，每个节点存在一个权值a[x]，同时还有一个s[x]为从根节点到节点x这条路径上的所有节点的a[x]之和。此时，擦除了所有深度为偶数的节点的s[x]（根节点深度为1）。然后要求反推出所有节点的a[x]，使得所有节点的a[x]之和最小。
+思路：对于叶子结点来说，权值为0就行。对于s为-1的结点来说，a[x]=s[fa]-s[x]，要使得a[x]最小，那么s[x]要最大，但最大不能超过x的子结点的所有的s，所以s[x]=min(s[g[x][i])。对于s已经确定的结点来说，a[x]=s[fa]-s[x]即可。
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=200005;
+const int mod=1e9+7;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+vector<int> g[maxn];
+int s[maxn],a[maxn],flag=1;
+void dfs(int x,int fa)
+{
+    if(!flag)
+        return ;
+    if(s[x]==-1)
+    {
+        if(g[x].empty())
+        {
+            s[x]=s[fa],a[x]=0;
+            return ;
+        }
+        int mn=inf;
+        for(int i=0; i<g[x].size(); i++)
+        {
+            mn=min(s[g[x][i]],mn);
+        }
+        if(mn<s[fa])
+        {
+            flag=0;
+            return ;
+        }
+        s[x]=mn,a[x]=s[x]-s[fa];
+    }
+    else
+        a[x]=s[x]-s[fa];
+    for(int i=0; i<g[x].size(); i++)
+    {
+        dfs(g[x][i],x);
+    }
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    for(int i=2; i<=n; i++)
+    {
+        int p;
+        cin>>p;
+        g[p].push_back(i);
+    }
+    for(int i=1; i<=n; i++)
+        cin>>s[i];
+    s[0]=0;
+    flag=1;
+    dfs(1,0);
+    if(!flag)
+    {
+        cout<<-1<<endl;
+        return 0;
+    }
+    ll ans=0;
+    for(int i=1; i<=n; i++)
+        ans+=a[i];
+    cout<<ans<<endl;
+    return 0;
+}

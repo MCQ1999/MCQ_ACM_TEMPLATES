@@ -1,0 +1,25 @@
+//Codeforces Round #539C (Div. 2)
+题意：给你n个数，求有多少长度为偶数的区间满足a[l]^…a[mid]=a[mid+1]^a[r]。
+思路：例如1 2 3 4 5，预处理异或前缀和得到1 3 0 4 1。可以发现[2,5]是满足条件的区间，异或到a[5]时又出现了1说明a[2]…a[5]=0，即a[2]^a[3]=a[4]^a[5]。保证区间长度为偶数只需要保证每次出现的值的位次的奇偶性相同即可，后面异或到的数只要出现过，ans就加上这个数前面出现的次数(此位置可以和前面每个出现此数的位置构成一个偶区间)。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=3e5+5;
+ll a[maxn],b[(1<<20)+5][2];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    ll ans=0;
+    b[0][0]=1;
+    for(int i=1;i<=n;i++)
+    {
+        cin>>a[i];
+        a[i]^=a[i-1];
+        ans+=b[a[i]][i&1];
+        b[a[i]][i&1]++;
+    }
+    cout<<ans<<endl;
+    return 0;
+}

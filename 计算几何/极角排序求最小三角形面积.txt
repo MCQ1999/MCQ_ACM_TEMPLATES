@@ -1,0 +1,53 @@
+链接：https://pintia.cn/problem-sets/994805046380707840/problems/994805046577840128
+题意：给n个点的坐标，找出这些点组成的最小三角形的面积。
+思路：对每个点进行极角排序，枚举每两个相邻的点，因为最小的三角形面积肯定存在于相邻向量组成的三角形。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int N=200005;
+struct node
+{
+    ll x,y;
+};
+ll cha(node a,node b)
+{
+    return a.x*b.y-a.y*b.x;
+}
+bool cmp(node a,node b)
+{
+    return cha(a,b)>0;
+}
+node g[N],t[N];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    while(cin>>n)
+    {
+        for(int i=0;i<n;i++)
+        {
+            cin>>g[i].x>>g[i].y;
+        }
+        double ans=1e18;
+        for(int i=0;i<n;i++)
+        {
+            int k=0;
+            for(int j=0;j<n;j++)
+            {
+                if(j!=i)
+                {
+                    t[k].x=g[j].x-g[i].x;
+                    t[k].y=g[j].y-g[i].y;
+                    k++;
+                }
+            }
+            sort(t,t+k,cmp);
+            for(int j=1;j<k;j++)
+            {
+               ans=min(ans,0.5*abs(cha(t[j],t[j-1])));
+            }
+        }
+        printf("%.3lf\n",ans);
+    }
+    return 0;
+}

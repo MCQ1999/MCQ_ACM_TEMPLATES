@@ -1,0 +1,194 @@
+/*
+https://blog.csdn.net/sunmaoxiang/article/details/80959300#commentBox
+我觉得这篇博客讲的通俗易懂，向量法很巧妙也很好理解
+*/
+区间和悖论问题 HDU 3038
+给你一系列区间和，判断给出的区间中有几个是不合法的
+#include<iostream>
+using namespace std;
+const int maxn=200005;
+int sum[maxn],pre[maxn];
+int n,m;
+void init()
+{
+    for(int i=0; i<=n; i++)
+    {
+        pre[i]=i;
+        sum[i]=0;
+    }
+}
+int find(int x)
+{
+    if(x==pre[x])
+        return x;
+    else
+    {
+        int root=find(pre[x]);
+        sum[x]+=sum[pre[x]];
+        return pre[x]=root;
+    }
+}
+int main()
+{
+
+    while(cin>>n>>m)
+    {
+        init();
+        int cnt=0;
+        for(int i=0; i<m; i++)
+        {
+            int p,q,s;
+            cin>>p>>q>>s;
+            p--;
+            int fp=find(p),fq=find(q);
+            if(fp!=fq)
+            {
+                pre[fp]=fq;
+                sum[fp]=sum[q]-sum[p]+s;
+            }
+            else if(sum[p]-sum[q]!=s)   cnt++;
+        }
+        cout<<cnt<<endl;
+    }
+    return 0;
+}
+种类并查集(%2) POJ 2492
+每次给出两个昆虫的关系（异性关系），然后发现这些条件中是否有悖论 
+#include<iostream>
+#include<cstdio>
+using namespace std;
+const int maxn=2005;
+int pre[maxn],sum[maxn],n,k;
+void init()
+{
+    for(int i=0; i<=n; i++)
+    {
+        pre[i]=i;
+        sum[i]=0;
+    }
+}
+int find(int x)
+{
+    if(x==pre[x])
+        return x;
+    else
+    {
+        int root=find(pre[x]);
+        sum[x]=(sum[x]+sum[pre[x]])%2;
+        return pre[x]=root;
+    }
+}
+int main()
+{
+    int t,cas=0;
+    cin>>t;
+    while(t--)
+    {
+        scanf("%d%d",&n,&k);
+        init();
+        int x,y,flag=0;
+        for(int i=0; i<k; i++)
+        {
+            scanf("%d%d",&x,&y);
+            int fx=find(x),fy=find(y);
+            if(fx!=fy)
+            {
+                pre[fx]=fy;
+                sum[fx]=(sum[x]-sum[y]+1)%2;
+            }
+            else if(sum[x]==sum[y])
+            {
+                flag=1;
+            }
+        }
+        printf("Scenario #%d:\n",++cas);
+        if(flag)
+        puts("Suspicious bugs found!\n");
+        else
+        puts("No suspicious bugs found!\n");
+    }
+
+    return 0;
+}
+种类并查集(%3) POJ 1182
+/*
+动物王国中有三类动物A,B,C，这三类动物的食物链构成了有趣的环形。A吃B， B吃C，C吃A。 
+现有N个动物，以1－N编号。每个动物都是A,B,C中的一种，但是我们并不知道它到底是哪一种。 
+有人用两种说法对这N个动物所构成的食物链关系进行描述： 
+“1 X Y”，表示X和Y是同类。 
+“2 X Y”，表示X吃Y。 
+此人对N个动物，用上述两种说法，一句接一句地说出K句话，这K句话有的是真的，有的是假的。当一句话满足下列三条之一时，这句话就是假话，否则就是真话。 
+1） 当前的话与前面的某些真的话冲突，就是假话； 
+2） 当前的话中X或Y比N大，就是假话； 
+3） 当前的话表示X吃X，就是假话。 
+你的任务是根据给定的N（1 <= N <= 50,000）和K句话（0 <= K <= 100,000），输出假话的总数。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<iostream>
+#include<string>
+#include<vector>
+#include<stack>
+#include<bitset>
+#include<cstdlib>
+#include<cmath>
+#include<set>
+#include<list>
+#include<deque>
+#include<map>
+#include<queue>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=50005;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+ll gcd(ll a,ll b)
+{
+    return b==0?a:gcd(b,a%b);
+}
+int n,k,pre[maxn],r[maxn];
+void init()
+{
+    for(int i=0;i<=n;i++)
+    {
+        pre[i]=i;
+        r[i]=0;
+    }
+}
+int find(int x)
+{
+    if(x==pre[x])
+        return x;
+    else
+    {
+        int root=find(pre[x]);
+        r[x]=(r[x]+r[pre[x]])%3;
+        return pre[x]=root;
+    }
+}
+int main()
+{
+    scanf("%d%d",&n,&k);
+    int d,x,y,ans=0;
+    init();
+    for(int i=0;i<k;i++)
+    {
+        scanf("%d%d%d",&d,&x,&y);
+        int fx=find(x),fy=find(y);
+        if(x>n||y>n||(d==2&&x==y))
+            ans++;
+        else if(fx!=fy)
+        {
+            pre[fx]=fy;
+            r[fx]=(r[y]+d-1-r[x]+3)%3;
+        }
+        else if((r[x]-r[y]+3)%3!=d-1)
+        {
+            ans++;
+        }
+    }
+    printf("%d\n",ans);
+    return 0;
+}

@@ -1,0 +1,9 @@
+//洛谷p1009
+n=eval(input())        #输入一个数字n，记得要用eval(),不然输入的是字符串
+ans=0         #定义一个数，用来保存答案
+for i in range(1,n+1):     #从1到n来算阶乘
+    d=1       #阶乘值初始化为1
+    for j in range(1,i+1):
+        d*=j       #简单的阶乘算法
+    ans+=d        #每次都加进去
+print(ans)        #输出答案

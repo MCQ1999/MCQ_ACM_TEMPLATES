@@ -1,0 +1,37 @@
+//洛谷p1010
+任何一个正整数都可以用2的幂次方表示，同时约定方次用括号来表示，即a^b可表示为a(b)。如137=2(2(2)+2+2(0))+2(2+2(0))+2(0)
+#include<bits/stdc++.h>
+using namespace std;
+void dfs(int n)
+{
+    if(n)
+    {
+        int i=0;
+        while(pow(2,i)<=n)  i++;
+        i--;
+        n-=pow(2,i);
+        cout<<2;
+        if(i!=1)
+            cout<<"(";
+        if(i==0||i==2)
+            cout<<i<<")";
+        else if(i!=1)
+        {
+            dfs(i);
+            cout<<")";
+        }
+        if(n)
+        {
+            cout<<"+";
+            dfs(n);
+        }
+    }
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    dfs(n);
+    return 0;
+}

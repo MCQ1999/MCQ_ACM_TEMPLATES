@@ -1,0 +1,33 @@
+/*欧拉函数的定义：对正整数n，欧拉函数是小于或等于n的数中与n互质的数的数目。例如euler(8)=4，因为1,3,5,7均和8互质。
+Euler函数表达通式：euler(x)=x(1-1/p1)(1-1/p2)(1-1/p3)(1-1/p4)…(1-1/pn),其中p1,p2……pn为x的所有素因数，x是不为0的整数。euler(1)=1（唯一和1互质的数就是1本身）。
+欧拉公式的延伸：一个数的所有质因子之和是euler(n)*n/2。*/
+//直接求：
+long long phi(long long x)
+{
+    int res = x,a = x;
+    for(int i=2;i*i<=a;i++)
+    {
+        if(a%i==0)
+        {
+            res = res/i*(i-1);//res -= res/i;
+            while(a%i==0)a/=i;
+        }
+    }
+    if(a>1)res =res/a*(a-1);//res -= res/a;
+    return res;
+}
+
+//打表：
+#include<bits/stdc++.h>
+using namespace std;
+#define Max 1000001
+int euler[Max];
+int main(){
+     euler[1]=1;
+     for(int i=2;i<Max;i++)
+       euler[i]=i;
+     for(int i=2;i<Max;i++)
+        if(euler[i]==i)
+           for(int j=i;j<Max;j+=i)
+              euler[j]=euler[j]/i*(i-1);//先进行除法是为了防止中间数据的溢出
+}

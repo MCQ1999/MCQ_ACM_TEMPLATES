@@ -1,0 +1,93 @@
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int N=1e5+5;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+int sum[N<<2],add[N<<2];
+int a[N],n;
+void pushUp(int rt)
+{
+    sum[rt]=sum[rt<<1]+sum[rt<<1|1];
+}
+void build(int l,int r,int rt)
+{
+    if(l==r)
+    {
+        sum[rt]=a[l];
+        return;
+    }
+    int m=(l+r)>>1;
+    build(l,m,rt<<1);
+    build(m+1,r,rt<<1|1);
+    pushUp(rt);
+}
+void update(int L,int C,int l,int r,int rt)
+{
+    if(l==r)
+    {
+        sum[rt]+=C;
+        return;
+    }
+    int m=(l+r)>>1;
+    if(L <= m) update(L,C,l,m,rt<<1);
+    else       update(L,C,m+1,r,rt<<1|1);
+    pushUp(rt);
+}
+void pushDown(int rt,int ln,int rn)
+{
+    if(add[rt])
+    {
+        add[rt<<1]+=add[rt];
+        add[rt<<1|1]+=add[rt];
+        sum[rt<<1]+=add[rt]*ln;
+        sum[rt<<1|1]+=add[rt]*rn;
+        add[rt]=0;
+    }
+}
+void update(int L,int R,int C,int l,int r,int rt)
+{
+    if(L <= l && r <= R)
+    {
+        sum[rt]+=C*(r-l+1);
+        add[rt]+=C;
+        return ;
+    }
+    int m=(l+r)>>1;
+    pushDown(rt,m-l+1,r-m);
+    if(L <= m) update(L,R,C,l,m,rt<<1);
+    if(R >  m) update(L,R,C,m+1,r,rt<<1|1);
+    pushUp(rt);
+}
+int query(int L,int R,int l,int r,int rt)
+{
+    if(L <= l && r <= R)
+    {
+        return sum[rt];
+    }
+    int m=(l+r)>>1;
+    pushDown(rt,m-l+1,r-m);
+    int ans=0;
+    if(L <= m) ans+=query(L,R,l,m,rt<<1);
+    if(R >  m) ans+=query(L,R,m+1,r,rt<<1|1);
+    return ans;
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(0);
+    std::cout.tie(0);
+    int n,m;
+    while(cin>>n>>m)
+    {
+        memset(add,0,sizeof(add));
+        for(int i=1; i<=n; i++)
+        {
+            cin>>a[i];
+        }
+        build(1,n,1);
+    }
+    return 0;
+}

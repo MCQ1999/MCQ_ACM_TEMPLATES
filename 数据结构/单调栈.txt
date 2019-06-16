@@ -1,0 +1,145 @@
+1.奶牛头朝右，问所有奶牛能看的的奶牛数的和。（poj 3250）
+#include<iostream>
+#include<stack>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=200005;
+const int mod=1e9+7;
+const double eps=1e-8;
+ll a[maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    while(cin>>n)
+    {
+        stack<int> s;
+        ll ans=0;
+        for(int i=1; i<=n+1; i++)
+        {
+            if(i<=n)
+                cin>>a[i];
+            else
+                a[i]=inf;
+            if(s.empty()||a[i]<a[s.top()])
+            {
+                s.push(i);
+            }
+            else
+            {
+                while(!s.empty()&&a[i]>=a[s.top()])
+                {
+                    ans+=i-s.top()-1;
+                    s.pop();
+                }
+                s.push(i);
+            }
+        }
+        cout<<ans<<endl;
+    }
+
+    return 0;
+}
+2.求仅由0，1组成的矩阵中，全部由1组成的子矩阵的最大面积。(poj3494)
+思路:用h[j]表示第j列的1的连续情况，即如果这一行是1并且上一行也是，那么h[j]++，用a[j]暂存h[j]的值，维护一个单调递减栈（栈顶最大），如果a[j]>=a[栈顶]，入栈；否则出栈直到找到第一个比a[j]大的，并且同时更新答案，即(j-top)*a[j]。最后把最后出栈的入栈，更新a[top]为a[j]，表示top到j都存在一个高度为a[j]的矩阵。
+#include<cstdio>
+#include<stack>
+#include<cstring>
+using namespace std;
+const int maxn=2005;
+int h[maxn],a[maxn];
+int main()
+{
+    int m,n;
+    while(scanf("%d%d",&m,&n)!=EOF)
+    {
+        memset(h,0,sizeof(h)),memset(a,0,sizeof(a));
+        int ans=0;
+        for(int i=1;i<=m;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                int c;
+                scanf("%d",&c);
+                if(c) h[j]++;
+                else h[j]=0;
+                a[j]=h[j];
+            }
+            a[n+1]=-1;
+            stack<int> s;
+            for(int j=1;j<=n+1;j++)
+            {
+                if(s.empty()||a[j]>=a[s.top()]) s.push(j);
+                else
+                {
+                    int top;
+                    while(!s.empty()&&a[j]<a[s.top()])
+                    {
+                        top=s.top();
+                        s.pop();
+                        ans=max(ans,a[top]*(j-top));
+                    }
+                    s.push(top);
+                    a[top]=a[j];
+                }
+            }
+        }
+        printf("%d\n",ans);
+    }
+    return 0;
+}
+3.给出一组数字，求一区间，使得区间元素和乘以区间最小值最大，结果要求给出这个最大值和区间的左右端点。(poj2796)
+思路:和上题类似，用a[i]暂存每个点的值，s储存前缀和，维护一个单调递减栈(栈顶最大)，大于栈顶就入栈，否则往左边延伸，找到比它大的所有值，更新能保证a[i]最小的区间的答案，最后一个出栈的要入栈，并更新a[top]=a[i]，这里是贪心+并查集的思想，因为a[i]>=0，所以保证a[i]最小的前提下区间越大越好。
+#include<cstdio>
+#include<stack>
+#include<cstring>
+using namespace std;
+#define ll long long
+const int maxn=100005;
+ll a[maxn],s[maxn];
+int main()
+{
+    int n;
+    while(~scanf("%d",&n))
+    {
+        memset(s,0,sizeof(s));
+        for(int i=1;i<=n;i++)
+        {
+            scanf("%lld",&a[i]);
+            s[i]=s[i-1]+a[i];
+        }
+        a[n+1]=-1;
+        stack<int> st;
+        ll ans=0,l,r;
+        for(int i=1;i<=n+1;i++)
+        {
+            if(st.empty()||a[i]>=a[st.top()])
+                st.push(i);
+            else
+            {
+                int top;
+                while(!st.empty()&&a[i]<a[st.top()])
+                {
+                    top=st.top();
+                    st.pop();
+                    if((s[i-1]-s[top-1])*a[top]>=ans)
+                    {
+                        ans=(s[i-1]-s[top-1])*a[top];
+                        l=top;
+                        r=i-1;
+                    }
+                }
+                st.push(top);
+                a[top]=a[i];
+            }
+        }
+        printf("%lld\n%lld %lld\n",ans,l,r);
+    }
+    return 0;
+}
+
+
+
+
+

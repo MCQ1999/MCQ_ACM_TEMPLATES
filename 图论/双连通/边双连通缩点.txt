@@ -1,0 +1,110 @@
+给一个无向连通图，至少添加几条边使得去掉图中任意一条边不改变图的连通性（即使得它变为边双连通图）。
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+using namespace std;
+const int N = 5010;//点数
+const int M = 20010;//边数，因为是无向图，所以这个值要 *2
+struct Edge
+{
+    int to,nxt;
+    bool cut;//是否是桥标记
+
+} edge[M];
+int head[N],tot;
+int low[N],dfn[N],sta[N],belong[N];//Belong 数组的值是1~block
+int id,top;
+int block;//边双连通块数
+bool insta[N];
+int bridge;//桥的数目
+void add(int u,int v)
+{
+    edge[tot].to = v;
+    edge[tot].nxt = head[u];
+    edge[tot].cut=false;
+    head[u] = tot++;
+
+}
+void Tarjan(int u,int pre)
+{
+    int v;
+    low[u] = dfn[u] = ++id;
+    sta[top++] = u;
+    insta[u] = true;
+    int pre_cnt = 0;
+    for(int i = head[u]; i != -1; i = edge[i].nxt)
+    {
+        v = edge[i].to;
+        if(v == pre && pre_cnt == 0)
+        {
+            pre_cnt++;
+            continue;
+        }
+        if(!dfn[v])
+        {
+            Tarjan(v,u);
+            if(low[u]>low[v]) low[u] = low[v];
+            if(low[v]>dfn[u])
+            {
+                bridge++;
+                edge[i].cut = true;
+                edge[i^1].cut = true;
+            }
+        }
+        else if( insta[v] && low[u] > dfn[v] )
+            low[u] = dfn[v];
+    }
+    if(low[u] == dfn[u])
+    {
+        block++;
+        do
+        {
+            v = sta[--top];
+            insta[v] = false;
+            belong[v] = block;
+
+        }
+        while( v!=u );
+    }
+
+}
+void init()
+{
+    tot = 0;
+    memset(head,-1,sizeof(head));
+}
+int du[N];//缩点后形成树，每个点的度数
+void solve(int n)
+{
+    memset(dfn,0,sizeof(dfn));
+    memset(insta,false,sizeof(insta));
+    id = top = block = 0;
+    Tarjan(1,0);
+    int ans = 0;
+    memset(du,0,sizeof(du));
+    for(int i = 1; i <= n; i++)
+        for(int j = head[i]; j != -1; j = edge[j].nxt)
+            if(edge[j].cut) du[belong[i]]++;
+    for(int i = 1; i <= block; i++)
+        if(du[i]==1) ans++; //找叶子结点的个数 ans, 构造边双连通图需要加边(ans+1)/2
+    printf("%d\n",(ans+1)/2);
+
+}
+int main()
+{
+    int n,m;
+    int u,v;
+    while(scanf("%d%d",&n,&m)==2)
+    {
+        init();
+        while(m--)
+        {
+            scanf("%d%d",&u,&v);
+            add(u,v);
+            add(v,u);
+        }
+        solve(n);
+    }
+    return 0;
+}
+

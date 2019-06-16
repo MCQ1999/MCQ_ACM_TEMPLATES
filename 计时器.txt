@@ -1,0 +1,16 @@
+#include<time.h>
+#include<iostream>
+#include<cstdio>
+using namespace std;
+int main()
+{
+     clock_t start,end;
+     start=clock();
+     //这里写你的源代码
+     //。
+     //。
+     //。
+     //。
+     end=clock();
+     cout<<end-start;   
+}    

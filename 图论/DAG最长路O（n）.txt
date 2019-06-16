@@ -1,0 +1,68 @@
+#include<bits/stdc++.h>
+#define ll long long
+using namespace std;
+#define inf 0x3f3f3f3f
+const int N=1005;
+struct node
+{
+    int to,val;
+};
+int dp[N];
+vector<node> g[N*N/2];
+int dfs(ll i){
+    if(dp[i]!=0) return dp[i];
+    int sz=g[i].size();
+    for(int j=0;j<sz;j++){
+            dp[i]=max(dp[i],dfs(g[i][j].to)+g[i][j].val);
+    }
+    return dp[i];
+}
+
+int main()
+{
+    int n,t,m;
+    scanf("%d",&t);
+    while(t--)
+    {
+        memset(dp,0,sizeof(dp));
+        scanf("%d%d",&n,&m);
+        for(int i=1;i<=m;i++)
+        {
+            int x,y,z;
+            scanf("%d %d %d",&x,&y,&z);
+            g[x].push_back({y,z});
+        }
+        int ma=0;
+        for(int i=0;i<n;i++)
+        {
+            ma=max(ma,dfs(i));
+        }
+        printf("%d\n",ma);
+        for(int i=0;i<=n;i++) g[i].clear();
+    }
+}
+/*
+//打印路径：
+int DP(int i){
+	if(dp[i]>0) return dp[i];
+	for(int j=0;j<n;j++){ //遍历i的所有可达出边 
+		if(map[i][j]!=Inf){
+			int temp=DP(j)+map[i][j];//单独计算dp 
+			if(dp[i]<temp){//可以获得更长的路径 
+				dp[i]=temp; 
+				next[i]=j; //保存i的后继顶点j 
+			}
+		} 
+	}
+	return dp[i]; 
+}
+ 
+//调用前需先获得最大的dp[i],然后将i作为路径的起点传入 
+void printPath(int i){
+	cout<<i;
+	while(next[i]!=-1){//next数组初始化为-1
+		 i=next[i];
+		 cout<<"->"<<i; 
+	} 
+} 
+*/

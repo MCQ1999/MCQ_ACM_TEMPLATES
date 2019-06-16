@@ -1,0 +1,271 @@
+#include<iostream>
+#include<cstdio>
+#include<algorithm>
+using namespace std;
+#define ls ft[rt].l
+#define rs ft[rt].r
+const int N = 200010;
+const int inf = 0x3f3f3f3f;
+int Rand() //随机数
+{
+    static int seed = 703;
+    return seed=(int)(seed*48271LL%2147483647);
+}
+
+int root,tot;
+
+struct fhq_treap
+{
+    int l,r;
+    int v,rnd;
+    int sz;
+    int mi,rev,lzy;
+} ft[N];
+
+void addOne( int rt, int v ) //加法标记
+{
+    if ( !rt )
+        return;
+    ft[rt].v += v;
+    ft[rt].lzy += v;
+    ft[rt].mi += v;
+}
+
+void revOne( int rt ) //反转标记
+{
+    if ( !rt )
+        return;
+    ft[rt].rev ^= 1;
+    swap ( ls, rs );
+}
+
+void pushUp( int rt ) //上推
+{
+    if ( !rt )
+        return;
+    ft[rt].mi = min ( ft[rt].v, min( ft[ls].mi, ft[rs].mi ) );
+    ft[rt].sz = ft[ls].sz+ft[rs].sz+1;
+}
+
+void pushDown( int rt ) //下推标记
+{
+    if ( !rt )
+        return;
+    if ( ft[rt].lzy )
+        addOne( ls, ft[rt].lzy ),addOne( rs, ft[rt].lzy );
+    if ( ft[rt].rev )
+        revOne( ls ),revOne( rs );
+    ft[rt].lzy = 0;
+    ft[rt].rev = 0;
+}
+
+void build( int &rt, int v ) //创建新结点
+{
+    rt = ++tot;
+    ft[rt].l = 0;
+    ft[rt].r = 0;
+    ft[rt].v = v;
+    ft[rt].rnd = Rand();
+    ft[rt].sz = 1;
+    ft[rt].mi = v;
+    ft[rt].rev = 0;
+    ft[rt].lzy = 0;
+}
+
+void split( int rt, int &l, int &r, int v ) //将以rt为根的树分裂为以l和r为根的子树
+{
+    if ( v==0 )
+        l = 0,r = rt;
+    else if ( v==ft[rt].sz )
+        l = rt,r = 0;
+    else if ( v<=ft[ls].sz )
+        pushDown( r=rt ),split( ls, l, ls, v ),pushUp( rt );
+    else
+        pushDown( l=rt ),split( rs, rs, r, v-ft[ls].sz-1 ),pushUp( rt );
+}
+
+void merge( int &rt, int l, int r ) //将以l和r为根的子树合并成以rt为根的树
+{
+    if ( l==0||r==0 )
+        rt = l+r;
+    else if ( ft[l].rnd<ft[r].rnd )
+        pushDown( rt=l ),merge( rs, rs, r ),pushUp( rt );
+    else
+        pushDown( rt=r ),merge( ls, l, ls ),pushUp( rt );
+}
+
+void add( int l, int r, int v ) //区间[l,r]+s
+{
+    int x,y,z;
+    split( root, x, y, r );
+    split( x, z, x, l-1 );
+    addOne( x, v );
+    merge( x, z, x );
+    merge( root, x, y );
+}
+
+void reverse( int l, int r ) //反转区间[l,r]
+{
+    int x,y,z;
+    split( root, x, y, r );
+    split( x, z, x, l-1 );
+    revOne( x );
+    merge( x, z, x );
+    merge( root, x, y );
+}
+
+void revolve( int l, int r, int v ) //将区间[l,r]向右移v位
+{
+    int x,y,z,h;
+    split( root, x, y, r-v );
+    split( x, z, x, l-1 );
+    split( y, y, h, v );
+    merge( x, y, x );
+    merge( x, z, x );
+    merge( root, x, h );
+}
+
+void insert( int k, int v )//位置k后面插入数v
+{
+    int x,y;
+    split( root, x, y, k );
+    merge( x, x, v );
+    merge( root, x, y );
+}
+int rank(int rt, int val) //查排名
+{
+    if(!rt) return 0;
+    if(ft[rt].v >= val) return rank(ft[rt].l, val);
+    return rank(ft[rt].r, val) + ft[ft[rt].l].sz + 1;
+}
+
+int findKth(int k)  //找排名为k的数
+{
+    int x, y, z, ans;
+    split(root, x, y, k - 1);
+    split(y, y, z, 1);
+    ans = ft[y].v;
+    merge(y, y, z);
+    merge(root, x, y);
+    return ans;
+}
+
+void delPos( int v ) //删除位置v的数
+{
+    int x,y,z;
+    split( root, x, y, v );
+    split( x, x, z, v-1 );
+    merge( root, x, y );
+}
+
+void delData( int v ) //删除数v
+{
+    int x,y,z;
+    int k=rank(root,v)+1;
+    split( root, x, y, k );
+    split( x, x, z, k-1 );
+    merge( root, x, y );
+}
+
+int queryMin( int l, int r ) //查最小
+{
+    int x,y,z,ans;
+    split( root, x, y, r );
+    split( x, z, x, l-1 );
+    ans = ft[x].mi;
+    merge( x, z, x );
+    merge( root, x, y );
+    return ans;
+}
+
+void insert(int val) //尾插
+{
+    int k = rank(root, val), x, y, z;
+    split(root, x, y, k);
+    build(z,val);
+    merge(x, x, z);
+    merge(root, x, y);
+}
+int pre(int val) //前驱
+{
+    int x, y, z, ans, k = rank(root, val);
+    split(root, x, y, k);
+    split(x, z, x, k-1);
+    ans = ft[x].v;
+    merge(x, z, x);
+    merge(root, x, y);
+    return ans;
+}
+int nxt(int val) //后继
+{
+    int x, y, z, ans, k = rank(root, val + 1);
+    split(root, x, y, k+1 );
+    split(x, z, x, k);
+    ans = ft[x].v;
+    merge(x, z, x);
+    merge(root, x, y);
+    return ans;
+}
+void print(int rt) //中序遍历和原序列一样
+{
+    if(!rt) return ;
+    if(ft[rt].rev||ft[rt].lzy) //别忘了下推标记
+        pushDown(rt);
+    print(ft[rt].l);
+    printf("%d ",ft[rt].v);
+    print(ft[rt].r);
+}
+int main()
+{
+    int n,m;
+    while(~scanf("%d",&n))
+    {
+        ft[0].mi = inf;
+        tot = root = 0;
+        for ( int i=1,x,t ; i<=n ; i++ )
+        {
+            scanf ( "%d", &x );
+            build ( t, x );
+            merge ( root, root, t );
+        }
+        scanf ( "%d", &m );
+        for ( int i=1 ; i<=m ; i++ )
+        {
+            char s[15];
+            int x,y,z;
+            scanf ( "%s", s );
+            if ( s[0]=='A' )
+            {
+                scanf ( "%d%d%d", &x, &y, &z );
+                add( x, y, z );
+            }
+            else if ( s[0]=='M' )
+            {
+                scanf ( "%d%d", &x, &y );
+                printf ( "%d\n", queryMin( x, y ) );
+            }
+            else if ( s[0]=='R'&&s[3]=='E' )
+            {
+                scanf ( "%d%d", &x, &y );
+                reverse ( x, y );
+            }
+            else if ( s[0]=='R'&&s[3]=='O' )
+            {
+                scanf ( "%d%d%d", &x, &y, &z );
+                revolve ( x, y, z%(y-x+1) );
+            }
+            else if ( s[0]=='I' )
+            {
+                scanf ( "%d%d", &x, &y );
+                build ( z, y );
+                insert ( x, z );
+            }
+            else if ( s[0]=='D' )
+            {
+                scanf ( "%d", &x );
+                delPos ( x );
+            }
+        }
+    }
+    return 0;
+}

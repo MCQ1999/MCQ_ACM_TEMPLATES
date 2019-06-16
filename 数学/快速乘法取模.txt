@@ -1,0 +1,11 @@
+ll mul(ll a, ll b, ll p) //快速乘取模，计算a*b%p
+{
+    ll ret = 0;
+    while(b)
+    {
+        if(b & 1) ret = (ret + a) % p;
+        a = (a + a) % p;
+        b >>= 1;
+    }
+    return ret;
+}

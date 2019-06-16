@@ -1,0 +1,69 @@
+//Âå¹Èp4244
+#include<algorithm>
+#include<cstdio>
+#define mxn 100010
+using namespace std;
+int n,m,l,r,sl,fh,ans,f[mxn],a[mxn],q[mxn];
+int tim,fa[mxn],dfn[mxn],low[mxn];
+int t,h[mxn];
+struct edge
+{
+    int to,nxt;
+}e[mxn<<2];
+int rd()
+{
+    sl=0;fh=1;
+    char ch=getchar();
+    while(ch<'0'||'9'<ch) {if(ch=='-') fh=-1; ch=getchar();}
+    while('0'<=ch&&ch<='9') sl=sl*10+ch-'0',ch=getchar();
+    return sl*fh;
+}
+void add(int u,int v)
+{
+    e[++t]=(edge){v,h[u]};h[u]=t;
+    e[++t]=(edge){u,h[v]};h[v]=t;
+}
+void solve(int rt,int u)
+{
+    int lim,tot=0;
+    for(int i=u;i!=fa[rt];i=fa[i]) a[++tot]=f[i];
+    lim=tot>>1;q[l=r=1]=tot<<1;
+    for(int i=1;i<=tot;++i) a[i+tot]=a[i];
+    for(int i=tot*2-1;i;--i)
+    {
+        while(l<=r&&q[l]-i>lim) ++l;
+        ans=max(ans,a[i]+q[l]+a[q[l]]-i);
+        while(l<=r&&a[q[r]]+q[r]<=a[i]+i) --r;
+        q[++r]=i;
+    }
+    for(int i=1;i<tot;++i) f[rt]=max(f[rt],a[i]+min(i,tot-i));
+}
+void dfs(int u)
+{
+    dfn[u]=low[u]=++tim;int v;
+    for(int i=h[u];i;i=e[i].nxt)
+    {
+        if((v=e[i].to)==fa[u]) continue;
+        if(!dfn[v]) fa[v]=u,dfs(v),low[u]=min(low[u],low[v]);
+        else low[u]=min(low[u],dfn[v]);
+        if(low[v]>dfn[u])
+        {
+            ans=max(ans,f[u]+f[v]+1);
+            f[u]=max(f[u],f[v]+1);
+        }
+    }
+    for(int i=h[u];i;i=e[i].nxt)
+        if(fa[v=e[i].to]!=u&&dfn[v]>dfn[u])
+            solve(u,v);
+}
+int main()
+{
+    n=rd();m=rd();
+    for(int k,x,y,i=1;i<=m;++i)
+    {
+        k=rd();x=rd();
+        for(int j=2;j<=k;++j) y=rd(),add(x,y),x=y;
+    }
+    dfs(1);printf("%d\n",ans);
+    return 0;
+}

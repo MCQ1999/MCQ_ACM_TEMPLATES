@@ -1,0 +1,117 @@
+#include<iostream>
+#include<cstring>
+#include<cstdio>
+using namespace std;
+const int N = 10010;
+const int M = 100010;
+struct Edge
+{
+    int to,next;
+    bool cut;//是否为桥的标记
+} edge[M];
+int head[N],tot;
+int low[N],dfn[N],sta[N];
+int id,top;
+bool insta[N];
+bool cut[N];
+int add_block[N];//删除一个点后增加的连通块
+int bridge;
+void add(int u,int v)
+{
+    edge[tot].to = v;
+    edge[tot].next = head[u];
+    edge[tot].cut = false;
+    head[u] = tot++;
+}
+void Tarjan(int u,int pre)
+{
+    int v;
+    low[u] = dfn[u] = ++id;
+    sta[top++] = u;
+    insta[u] = true;
+    int son = 0;
+    int pre_cnt = 0; //处理重边，如果不需要可以去掉
+    for(int i = head[u]; i != -1; i = edge[i].next)
+    {
+        v = edge[i].to;
+        if(v == pre && pre_cnt == 0)
+        {
+            pre_cnt++;
+            continue;
+        }
+        if( !dfn[v] )
+        {
+            son++;
+            Tarjan(v,u);
+            if(low[u] > low[v])low[u] = low[v];
+//桥
+//一条无向边 (u,v) 是桥，当且仅当 (u,v) 为树枝边，且满足DFS(u)<Low(v)。
+            if(low[v] > dfn[u])
+            {
+                bridge++;
+                edge[i].cut = true;
+                edge[i^1].cut = true;
+            }
+//割点
+//一个顶点 u 是割点，当且仅当满足 (1) 或 (2) (1) u 为树根，且u 有多于一个子树。
+//(2) u 不为树根，且满足存在 (u,v) 为树枝边 (或称父子边，
+//即 u 为 v 在搜索树中的父亲)，使得 DFS(u)<=Low(v)
+            if(u != pre && low[v] >= dfn[u]) //不是树根
+            {
+                cut[u] = true;
+                add_block[u]++;
+            }
+        }
+        else if( low[u] > dfn[v])
+            low[u] = dfn[v];
+    }
+//树根，分支数大于 1
+    if(u == pre && son > 1)cut[u] = true;
+    if(u == pre)add_block[u] = son - 1;
+    insta[u] = false;
+    top--;
+}
+void solve(int N)
+{
+    memset(dfn,0,sizeof(dfn));
+    memset(insta,0,sizeof(insta));
+    memset(add_block,0,sizeof(add_block));
+    memset(cut,false,sizeof(cut));
+    id = top = 0;
+    int cnt = 0;//原来的连通块数
+    for(int i = 1; i <= N; i++)
+        if( !dfn[i] )
+        {
+            Tarjan(i,i);//找割点调用必须是 Tarjan(i,i)
+            cnt++;
+        }
+    int ans = 0;
+    for(int i = 1; i <= N; i++)
+        ans = max(ans,cnt+add_block[i]);
+    printf("%d\n",ans);
+}
+void init()
+{
+    tot = 0;
+    memset(head,-1,sizeof(head));
+}
+int main()
+{
+    int n,m;
+    int u,v;
+    while(scanf("%d%d",&n,&m)==2)
+    {
+        if(n==0 && m == 0)break;
+        init();
+        while(m--)
+        {
+            scanf("%d%d",&u,&v);
+            u++;
+            v++;
+            add(u,v);
+            add(v,u);
+        }
+        solve(n);
+    }
+    return 0;
+}

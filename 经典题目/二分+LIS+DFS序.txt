@@ -1,0 +1,47 @@
+链接：https://ac.nowcoder.com/acm/contest/368/B
+
+
+题意:有一棵n个节点的二叉树，1为根节点，每个节点有一个值wi。现在要选出尽量多的点。
+对于任意一棵子树，都要满足：
+如果选了根节点的话，在这棵子树内选的其他的点都要比根节点的值大；
+如果在左子树选了一个点，在右子树中选的其他点要比它小。
+第一行一个整数n。
+第二行n个整数wi，表示每个点的权值。
+接下来n行，每行两个整数a,b。第i+2行表示第i个节点的左右儿子节点。没有为0。
+思路:因为根节点的权值最小，其次是右子树的点，最后是左子树的点，所以按照先根，再右子树，再左子树的顺序dfs整棵树，求出dfs序，在dfs序上求最长上升子序列。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=100005;
+ll w[maxn],lc[maxn],rc[maxn],q[maxn],tot,a[maxn],cnt;
+void dfs(int x)
+{
+    if(!x) return ;
+    q[++tot]=x;
+    dfs(rc[x]);
+    dfs(lc[x]);
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n;
+    cin>>n;
+    for(int i=1;i<=n;i++)
+    {
+        cin>>w[i];
+    }
+    for(int i=1;i<=n;i++)
+    {
+        cin>>lc[i]>>rc[i];
+    }
+    dfs(1);
+    a[++cnt]=w[q[1]];
+    for(int i=2;i<=n;i++)
+    {
+        if(w[q[i]]>a[cnt]) a[++cnt]=w[q[i]];
+        else a[lower_bound(a+1,a+cnt+1,w[q[i]])-a]=w[q[i]];
+    }
+    cout<<cnt<<endl;
+    return 0;
+}
+

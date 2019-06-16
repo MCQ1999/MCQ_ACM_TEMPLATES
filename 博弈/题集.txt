@@ -1,0 +1,28 @@
+1.HDU1525 
+题意：给出了两个正数a.b每次操作，大的数减掉小的数的整数倍。一个数变为0 的时候结束。谁先先把其中一个数减为0的获胜。问谁可以赢。Stan是先手。
+代码：
+#include <string.h>
+#include <stdio.h>
+#include <algorithm>
+#include <iostream>
+using namespace std;
+int main()
+{
+    int a,b;
+    while(scanf("%d%d",&a,&b) == 2)
+    {
+        if( a == 0 && b == 0)break;
+        if( a < b)swap(a,b);
+        int win = 0;
+        while(b)
+        {
+            if( a%b == 0 || a/b >= 2)break;
+            a = a-b;
+            swap(a,b);
+            win ^= 1;
+        }
+        if(win == 0)printf("Stan wins\n");
+        else printf("Ollie wins\n");
+    }
+    return 0;
+}

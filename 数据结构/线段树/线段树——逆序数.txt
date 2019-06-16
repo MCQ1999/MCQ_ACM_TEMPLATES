@@ -1,0 +1,99 @@
+1.hdu1394:给一个0-n-1的排列，这个排列中的逆序数为数对 (ai, aj) 满足 i < j and ai > aj的个数。依次把第一个数放到排列的末尾会得到另外n-1个排列，求这n个排列中的最小的逆序数。
+思路：每次把首位移到末尾，逆序数变化是大于a[0]的个数（(n-2)-(a[0]-1)）-小于a[0]的个数（a[0]），即sum=sum+(n-2)-(a[0]-1)-a[0]。创建线段树的时候就是按下标顺序插入的，所以a[i]产生的逆序数=在a[i]之前插入并且大于a[i]的数，查询a[i]~n-1的Sum即可。然后更新a[i]所在的区间表示这个数已经出现过。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int maxn=50005;
+int Sum[maxn<<2],Add[maxn<<2];//Sum求和，Add为懒惰标记
+int A[maxn],n;//存原数组数据下标[1,n]
+void PushUp(int rt)
+{
+    Sum[rt]=Sum[rt<<1]+Sum[rt<<1|1];
+}
+void Build(int l,int r,int rt)  //l,r表示当前节点区间，rt表示当前节点编号
+{
+    if(l==r)  //若到达叶节点
+    {
+        Sum[rt]=0;//储存数组值
+        return;
+    }
+    int m=(l+r)>>1;
+    //左右递归
+    Build(l,m,rt<<1);
+    Build(m+1,r,rt<<1|1);
+    //更新信息
+    PushUp(rt);
+}
+void Update(int L,int l,int r,int rt) //l,r表示当前节点区间，rt表示当前节点编号
+{
+    if(l==r) //到叶节点，修改
+    {
+        Sum[rt]++;
+        return;
+    }
+    int m=(l+r)>>1;
+    //根据条件判断往左子树调用还是往右
+    if(L <= m) Update(L,l,m,rt<<1);
+    else       Update(L,m+1,r,rt<<1|1);
+    PushUp(rt);//子节点更新了，所以本节点也需要更新信息
+}
+void PushDown(int rt,int ln,int rn)
+{
+    //ln,rn为左子树，右子树的数字数量。
+    if(Add[rt])
+    {
+        //下推标记
+        Add[rt<<1]+=Add[rt];
+        Add[rt<<1|1]+=Add[rt];
+        //修改子节点的Sum使之与对应的Add相对应
+        Sum[rt<<1]+=Add[rt]*ln;
+        Sum[rt<<1|1]+=Add[rt]*rn;
+        //清除本节点标记
+        Add[rt]=0;
+    }
+}
+int Query(int L,int R,int l,int r,int rt) //L,R表示操作区间，l,r表示当前节点区间，rt表示当前节点编号
+{
+    if(L <= l && r <= R)
+    {
+        //在区间内，直接返回
+        return Sum[rt];
+    }
+    int m=(l+r)>>1;
+    //下推标记，否则Sum可能不正确
+    PushDown(rt,m-l+1,r-m);
+    //累计答案
+    int ANS=0;
+    if(L <= m) ANS+=Query(L,R,l,m,rt<<1);
+    if(R >  m) ANS+=Query(L,R,m+1,r,rt<<1|1);
+    return ANS;
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(0);
+    std::cout.tie(0);
+    int t,k=0;
+    int n;
+    while(cin>>n)
+    {
+        memset(Add,0,sizeof(Add));
+        memset(Sum,0,sizeof(Sum));
+        Build(0,n-1,1);
+        int sum=0;
+        for(int i=0; i<n; i++)
+        {
+            cin>>A[i];
+            sum+=Query(A[i],n-1,0,n-1,1);
+            Update(A[i],0,n-1,1);
+        }
+        int mi=sum;
+        for(int i=0;i<n-1;i++)
+        {
+            sum=sum+n-A[i]*2-1;
+            mi=min(mi,sum);
+        }
+        cout<<mi<<endl;
+    }
+    return 0;
+}

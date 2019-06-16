@@ -1,0 +1,104 @@
+//HDU 4348
+给你一串序列，每次对它有四种操作， 1. 将l到r之间所有的数+d，同时时间戳+1。 2. 查询当前时间戳下l到r的所有数的总和。 3..查询时间戳d下的l到r的所有数的和。 4.将时间戳返回至t。
+#include<bits/stdc++.h>
+#define mid (l+r)/2
+using namespace std;
+#define ll long long
+const int N = 1e5+5;
+int n, q, sz, num = 0;
+int T[N];
+ll sum[N<<5],add[N<<5];
+int L[N<<5], R[N<<5];
+inline int build(int l, int r)
+{
+    int rt = ++ num;
+   // sum[rt] = 0;
+    if(l==r)
+    {
+        scanf("%lld",&sum[rt]);
+        return rt;
+    }
+    if (l < r)
+    {
+        L[rt] = build(l, mid);
+        R[rt] = build(mid+1, r);
+    }
+    sum[rt]=sum[L[rt]]+sum[R[rt]];
+    return rt;
+}
+inline int update(int pre, ll l, ll r, ll x,ll ql,ll qr)
+{
+    int rt = ++ num;
+    L[rt] = L[pre];
+    R[rt] = R[pre];
+    sum[rt] = sum[pre]+x*(qr-ql+1);
+    add[rt]=add[pre];
+    if(ql == l && r == qr)
+    {
+        add[rt]+=x;
+        return rt;
+    }
+    if(qr <= mid) L[rt]=update(L[pre], l, mid, x,ql,qr);
+    else if(ql >  mid) R[rt]=update(R[pre], mid+1, r, x,ql,qr);
+    else
+    {
+        L[rt]=update(L[pre], l, mid, x,ql,mid);
+        R[rt]=update(R[pre], mid+1, r, x,mid+1,qr);
+    }
+    return rt;
+}
+inline ll query(int u, ll l, ll r, int ql,int qr)
+{
+    ll ans=add[u]*(qr-ql+1);
+    if(ql <= l && r <= qr)
+    {
+        return sum[u];
+    }
+    if(qr<=mid) ans+=query(L[u],l,mid,ql,qr);
+    else if(ql>mid) ans+=query(R[u],mid+1,r,ql,qr);
+    else
+    {
+        ans+=query(L[u],l,mid,ql,mid);
+        ans+=query(R[u],mid+1,r,mid+1,qr);
+    }
+    return ans;
+}
+int main()
+{
+    while(~scanf("%d%d", &n, &q))
+    {
+        memset(sum,0,sizeof(sum));
+        memset(add,0,sizeof(add));
+        num=0;
+        int now=0;
+        T[0] = build(1, n);
+        while (q --)
+        {
+            char op[10];
+            scanf("%s",op);
+            int x, y, z;
+            if(op[0]=='C')
+            {
+                scanf("%d%d%d", &x, &y, &z);
+                now++;
+                T[now]=update(T[now-1],1,n,z,x,y);
+            }
+            else if(op[0]=='Q')
+            {
+                scanf("%d%d",&x,&y);
+                printf("%lld\n",query(T[now],1,n,x,y));
+            }
+            else if(op[0]=='H')
+            {
+                scanf("%d%d%d",&x,&y,&z);
+                printf("%lld\n",query(T[z],1,n,x,y));
+            }
+            else
+            {
+                scanf("%d",&now);
+                num=T[now+1]-1;
+            }
+        }
+    }
+    return 0;
+}

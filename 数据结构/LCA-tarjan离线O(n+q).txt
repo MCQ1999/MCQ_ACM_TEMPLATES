@@ -1,0 +1,55 @@
+#include<cstdio>
+#define il inline
+const int N=500010;
+struct edge
+{
+    int to,nxt;
+} g[2*N];
+struct Edge
+{
+    int to,nxt,lca;
+} G[2*N];
+int head[N],cnt,fa[N],Cnt,s,Head[N],dis[N],m,n;
+bool vis[N];
+il void add(int u,int v)
+{
+    g[++cnt]=(edge){v,head[u]};
+    head[u]=cnt;
+}
+il void Add(int u,int v)
+{
+    G[++Cnt]=(Edge){v,Head[u]};
+    Head[u]=Cnt;
+}
+il int find(int x)
+{
+    if(x!=fa[x])fa[x]=find(fa[x]);
+    return fa[x];
+}
+il void Tarjan(int x)
+{
+    vis[x]=true;
+    fa[x]=x;
+    for(int v,i=head[x]; i; i=g[i].nxt)
+    {
+        v=g[i].to;
+        if(!vis[v])Tarjan(v),fa[v]=x;
+    }
+    for(int v,i=Head[x]; i; i=G[i].nxt)
+        if(vis[G[i].to])
+        {
+            int S=-1;
+            if(i%2)S=1;
+            G[i].lca=find(G[i].to);
+            G[i+S].lca=G[i].lca;
+        }
+}
+int main ( )
+{
+    scanf("%d%d%d",&n,&m,&s);
+    for(int u,v,i=1; i<n; i++)scanf("%d%d",&u,&v),add(u,v),add(v,u);
+    for(int u,v,i=1; i<=m; i++)scanf("%d%d",&u,&v),Add(u,v),Add(v,u);
+    Tarjan(s);
+    for(int i=1; i<=m; i++)printf("%d\n",G[i*2].lca);
+    return 0;
+}

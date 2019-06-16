@@ -1,0 +1,86 @@
+/*
+block代表每一块有多大，num代表一共有几块，belong[i]代表原序列中第i个元素在第几块，l[i]代表第i块的左端点,r[i]代表第i块的右端点。
+*/
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=200005;
+const int mod=1e9+7;
+ll block,belong[maxn],num,l[maxn],r[maxn],n,m,a[maxn],Max[maxn];
+void build()
+{
+    block=sqrt(n);
+    num=n/block;
+    if(n%block) num++;
+    for(int i=1; i<=num; i++)
+    {
+        l[i]=(i-1)*block+1,r[i]=i*block;
+    }
+    r[num]=n;
+    for(int i=1; i<=n; i++)
+    {
+        belong[i]=(i-1)/block+1;
+    }
+    for(int i=1;i<=num;i++)
+    {
+        for(int j=l[i];j<=r[i];j++)
+        {
+            Max[i]=max(Max[i],a[j]);
+        }
+    }
+}
+void update(ll x,ll y)
+{
+    a[x]+=y;
+    Max[belong[x]]=max(Max[belong[x]],a[x]);
+}
+ll ask(ll x,ll y)
+{
+    ll ans=0;
+    if(belong[x]==belong[y])
+    {
+        for(int i=x;i<=y;i++)
+        {
+            ans=max(ans,a[i]);
+        }
+        return ans;
+    }
+    for(int i=x;i<=r[belong[x]];i++)
+    {
+        ans=max(ans,a[i]);
+    }
+    for(int i=belong[x]+1;i<belong[y];i++)
+    {
+        ans=max(ans,Max[i]);
+    }
+    for(int i=l[belong[y]];i<=y;i++)
+    {
+        ans=max(ans,a[i]);
+    }
+    return ans;
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    while(cin>>n>>m)
+    {
+        build();
+        memset(a,0,sizeof(a));
+        for(int i=0;i<m;i++)
+        {
+            int x,y,t;
+            cin>>t>>x>>y;
+            if(t==1)
+            {
+                update(x,y);
+            }
+            else
+            {
+                cout<<ask(x,y)<<endl;
+            }
+        }
+    }
+    return 0;
+}
+

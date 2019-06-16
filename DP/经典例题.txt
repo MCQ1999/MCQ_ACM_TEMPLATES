@@ -1,0 +1,53 @@
+1.三维DP
+题意：给你一个n*m的矩阵和1-n*m个数，问有多少种情况满足纳什均衡的点只有一个。纳什均衡点是指这个元素在所在行和所在列都是最大的。
+思路：设dp[i][j][k]表示用i个数覆盖j行k列的方案数。dp[1][1][1]=n*m，多出一行：dp[i+1][j+1][k]=(n-j)*k*dp[i][j][k],多出一列：dp[i+1][j][k+1]=(m-k)*j*dp[i][j][k],行列都不多出：dp[i][j][k]=(j*k-i)*dp[i][j][k]。
+2.有限制的背包
+题意:一共有a3 a2 a1…g3 g2 g1段位且递增，每个人只能邀请段位差距不超过5的人，5个人满了就可以开一局，问最多同时能开几局。
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=200005;
+int get(string s)
+{
+    int t=3-(s[1]-'0')+1;
+    char c=s[0];
+    t+=(s[0]-'a')*3;
+    return t;
+}
+int a[maxn],dp[maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n,t;
+    cin>>t;
+    while(t--)
+    {
+        cin>>n;
+        memset(dp,0,sizeof(dp));
+        memset(a,0,sizeof(a));
+        for(int i=1;i<=n;i++)
+        {
+            string s;
+            cin>>s;
+            a[i]=get(s);
+        }
+        sort(a+1,a+n+1);
+        for(int i=5;i<=n;i++)
+        {
+            dp[i]=dp[i-1];
+            int flag=0;
+            for(int j=1;j<=4;j++)
+            {
+                if(a[i-j+1]-a[i-j]>5){flag=1;break;}
+            }
+            if(!flag) dp[i]=max(dp[i],dp[i-5]+1);
+        }
+        cout<<dp[n]<<endl;
+    }
+    return 0;
+}
+2.链接：https://ac.nowcoder.com/acm/contest/1/D
+
+
+
+小M想知道某件物品的重量，但是摆在他面前的只有一个天平（没有游标）和一堆石子，石子可以放左边也可以放右边。他现在知道每个石子的重量。问能不能根据上述条件，能不能测出所问的重量。
+思路：此题数据小（100）,设dp[i][j]表示前i个石子能否凑出质量j，初始化dp[i][0]=1，if(dp[i-1][j]){dp[i][j]=1;dp[i][j+a[i]]=1;dp[i][abs(a[i]-j)]=1;}

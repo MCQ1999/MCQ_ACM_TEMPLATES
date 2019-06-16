@@ -1,0 +1,34 @@
+bool vis[maxn];
+int lowc[maxn];
+int prim(int cost[][maxn],int n)
+{
+    int ans=0;
+    memset(vis,false,sizeof(vis));
+    vis[0]=true;
+    for(int i=1; i<n; i++)
+    {
+        lowc[i]=cost[0][i];
+    }
+    for(int i=1; i<n; i++)
+    {
+        int minc=inf;
+        int p=-1;
+        for(int j=0; j<n; j++)
+        {
+            if(!vis[j]&&minc>lowc[j])
+            {
+                minc=lowc[j];
+                p=j;
+            }
+        }
+        if(minc==inf)   return -1;
+        ans+=minc;
+        vis[p]=true;
+        for(int j=0; j<n; j++)
+        {
+            if(!vis[j]&&lowc[j]>cost[p][j])
+                lowc[j]=cost[p][j];
+        }
+    }
+    return ans;
+}

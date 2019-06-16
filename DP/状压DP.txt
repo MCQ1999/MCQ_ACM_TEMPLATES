@@ -1,0 +1,114 @@
+1.棋盘铺1*2和2*1的木块。
+题意:有一个N*M(N<=5,M<=1000)的棋盘，现在有1*2及2*1的小木块无数个，要盖满整个棋盘，有多少种方式？答案只需要mod1,000,000,007即可。
+思路:假设第一列已经填满，则第二列的摆设方式，只与第一列对第二列的影响有关。同理，第三列的摆设方式也只与第二列对它的影响有关。那么，使用一个长度为N的二进制数state来表示这个影响。dp[i][state]表示该填充第i列，第i-1列对它的影响是state的时候的方法数。i<=M,0<=state<2N
+
+对于每一列，情况数也有很多，但由于N很小，所以可以采取搜索的办法去处理。对于每一列，搜索所有可能的放木块的情况，并记录它对下一列的影响，之后更新状态。状态转移方程如下：
+
+dp[i][state]=∑dp[i-1][pre]每一个pre可以通过填放成为state。
+//第i列，枚举到了第j行，当前状态是state，对下一列的影响是nex
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+using namespace std;
+#define ll long long
+int n, m;
+ll dp[1005][34];
+void dfs(int i,int j,int state,int nex)
+{
+    if (j==n)
+    {
+        dp[i+1][nex]+=dp[i][state];
+        return;
+    }
+    //如果这个位置已经被上一列所占用,直接跳过
+    if (((1<<j)&state)>0)
+        dfs(i,j+1,state,nex);
+    //如果这个位置是空的，尝试放一个1*2的
+    if (((1<<j)&state)==0)
+        dfs(i,j+1,state,nex|(1<<j));
+    //如果这个位置以及下一个位置都是空的，尝试放一个2*1的
+    if (j+1<n && ((1<<j)&state)==0 && ((1<<(j+1))&state)==0)
+        dfs(i,j+2,state,nex);
+    return;
+}
+int main()
+{
+    while (cin>>n>>m)
+    {
+        memset(dp,0,sizeof(dp));
+        if (n==0 && m==0) break;
+        dp[1][0]=1;
+        for (int i=1; i<=m; i++)
+        {
+            for (int j=0; j<(1<<n); j++)
+                if (dp[i][j])
+                {
+                    dfs(i,0,j,0);
+                }
+        }
+        cout<<dp[m+1][0]<<endl;
+    }
+}
+2.玉米田(洛谷p1879)
+农场主John新买了一块长方形的新牧场，这块牧场被划分成M行N列(1 ≤ M ≤ 12; 1 ≤ N ≤ 12)，每一格都是一块正方形的土地。John打算在牧场上的某几格里种上美味的草，供他的奶牛们享用。遗憾的是，有些土地相当贫瘠，不能用来种草。并且，奶牛们喜欢独占一块草地的感觉，于是John不会选择两块相邻的土地，也就是说，没有哪两块草地有公共边。John想知道，如果不考虑草地的总块数，那么，共有多少种种植方案可供他选择？（当然，把新牧场完全荒废也是一种方案）
+#include <iostream>
+#include <cstdio>
+#include <algorithm>
+using namespace std;
+const int mod = 100000000;
+int n, m;
+int a[13][13];
+int F[13];
+//第[i]行的土地状态
+int f[13][1 << 12 + 5];
+//f[i][j]前[i]行的状态为j时的合法方案数  注意是前i行不是第i行
+bool g[1 << 12 + 5];
+//g[i]记录i这个状态是否合法
+int main()
+{
+    scanf("%d %d", &m, &n);
+    for (int i = 1; i <= m; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            scanf("%d", &a[i][j]);
+            F[i] = (F[i] << 1) + a[i][j];
+        }
+    }
+    for (int i = 0; i < (1 << n); i++)
+        g[i] = (!(i & (i << 1))) && (!(i & (i >> 1)));
+    f[0][0] = 1;
+    for (int i = 1; i <= m; i++)
+    {
+        //枚举每行
+        for (int j = 0; j < (1 << n); j++)
+        {
+            //枚举这行每个可能的状态
+            if (g[j] && ((j & F[i]) == j))
+            {
+                //这行的状态没有并排的1
+                //且状态j与F[i]相同
+                //使j与F[i]相同保证是在肥沃土地上种草
+                for (int k = 0; k < (1 << n); k++)
+                {
+                    //枚举上一行的状态
+                    if ((k & j) == 0)
+                    {
+                        //与该行状态取&为0说明上一行与这一行不存在任意一块草地有公共边
+                        f[i][j] = (f[i][j] + f[i - 1][k]) % mod;
+                    }
+                }
+            }
+        }
+    }
+    int ans = 0;
+    for (int i = 0; i < (1 << n); i++)
+    {
+        ans = (ans + f[m][i]) % mod;
+        //最后将前m行所有满足条件的方案数累加
+    }
+    printf("%d\n", ans);
+    return 0;
+}
+

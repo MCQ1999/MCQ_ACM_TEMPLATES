@@ -1,0 +1,71 @@
+#include<cmath>
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+const int N=1000100;
+using namespace std;
+int n,m,s,tot=0,cnt=0;
+int head[N],nxt[N],to[N];
+int fir[N],order[N],depth[N];
+int f[20][N],rec[20][N];
+void addedge(int x,int y)
+{
+    cnt++;
+    nxt[cnt]=head[x];
+    head[x]=cnt;
+    to[cnt]=y;
+}
+void dfs(int u,int dep)//dfs处理出三个数组
+{
+    fir[u]=++tot,order[tot]=u,depth[tot]=dep;
+    for(int i=head[u];i!=-1;i=nxt[i])
+    {
+        int v=to[i];
+        if(!fir[v])
+        {
+            dfs(v,dep+1);
+            order[++tot]=u,depth[tot]=dep;
+        }
+    }
+}
+int lca(int l,int r)
+{
+    l=fir[l],r=fir[r];
+    if(l>r) swap(l,r);
+    int k=0;
+    while((1<<k)<=r-l+1) k++;
+    k--;
+    if(f[k][l]<f[k][r-(1<<k)+1]) return rec[k][l];
+    else return rec[k][r-(1<<k)+1];
+}
+int main()
+{
+    memset(head,-1,sizeof(head));
+    scanf("%d%d%d",&n,&m,&s);
+    for(int i=1;i<n;i++)
+    {
+        int x,y;
+        scanf("%d%d",&x,&y);
+        addedge(x,y);
+        addedge(y,x);
+    }
+    dfs(s,1);
+    for(int i=1;i<=tot;i++)
+        f[0][i]=depth[i],rec[0][i]=order[i];
+    for(int i=1;i<=log(tot)/log(2);i++)
+        for(int j=1;j<=tot-(1<<i)+1;j++)
+        {
+            if(f[i-1][j]<f[i-1][j+(1<<(i-1))])
+                f[i][j]=f[i-1][j],rec[i][j]=rec[i-1][j];
+            else f[i][j]=f[i-1][j+(1<<(i-1))],rec[i][j]=rec[i-1][j+(1<<(i-1))];
+        }
+    //rec记录的是区间内深度最小值的编号
+    for(int i=1;i<=m;i++)
+    {
+        int l,r;
+        scanf("%d%d",&l,&r);
+        printf("%d\n",lca(l,r));
+    }
+    return 0;
+}

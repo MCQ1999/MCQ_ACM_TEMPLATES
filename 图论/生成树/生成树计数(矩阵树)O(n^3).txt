@@ -1,0 +1,285 @@
+//矩阵树模板
+#include<bits/stdc++.h>
+#define ll long long
+using namespace std;
+const int N=20;
+int du[N];        //度数矩阵,记录每一个点的度数.    //不懂就看下上面那个定理证明.
+ll a[N][N];        //矩阵树,  对角线是度数矩阵的每一个数,其余地方为 a[i][j] = a[i][j] - vis[i][j] ;
+int vis[N][N];   //临接矩阵,u与v相连就是等于1,否则就是为0.注意是无向边.
+
+ll det(int n)    //生成树计数:Matrix-Tree定理   //这个是求行列式的精华啊(实质上这个子函数就是用来求行列式的值的!)(所以也适用于求行列式值的题)
+{
+    ll ret=1;
+    for(int i=2; i<=n; i++)    //计算任意一个n-1阶行列式的值就是答案.
+    {
+        for(int j=i+1; j<=n; j++)
+        {
+            while(a[j][i])
+            {
+                ll t=a[i][i]/a[j][i];    //如果要模,则这里就一下
+                for(int k=i; k<=n; k++)
+                    a[i][k]=(a[i][k]-a[j][k]*t);    //加一下
+                for(int k=i; k<=n; k++)
+                    swap(a[i][k],a[j][k]);
+                ret=-ret;
+            }
+        }
+        if(a[i][i]==0)
+            return 0;     //图无法联通.
+        ret*=a[i][i];     //加一下
+    }
+    if(ret<0)     // 可以缩合为 ((ret % p ) + p ) % p ;
+        ret=-ret;
+    return ret;
+}    //这个就是程序的主要函数,计算行列式的值.
+
+int main()
+{
+    int t;
+    scanf("%d",&t);
+    while(t--)
+    {
+        memset(du,0,sizeof(du));
+        memset(a,0,sizeof(a));
+        memset(vis,0,sizeof(vis));
+        int n,m;
+        scanf("%d%d",&n,&m);
+        int u,v;
+        while(m--)
+        {
+            scanf("%d%d",&u,&v);
+            a[u][v]=a[v][u]=-1;     //u与v相连,所以在目标矩阵中为-1.
+            du[u]++;
+            du[v]++;
+        }
+        for(int i=1; i<=n; i++)
+            a[i][i]=du[i];
+        printf("%lld\n",det(n));
+    }
+    return 0;
+}
+//高精度（java）
+import java.math.BigInteger;
+import java.util.Scanner;
+
+class Main {
+
+	static final int N = 105;
+	static int du[] = new int[N]; // 度数矩阵,记录每一个点的度数. //不懂就看下上面那个定理证明.
+	static BigInteger a[][] = new BigInteger[N][N]; // 矩阵树, 对角线是度数矩阵的每一个数,u与v相连则a[u][v]=-1
+
+	static BigInteger det(int n) // 生成树计数:Matrix-Tree定理 //这个是求行列式的精华啊(实质上这个子函数就是用来求行列式的值的!)(所以也适用于求行列式值的题)
+	{
+		BigInteger ret = new BigInteger("1");
+
+		for (int i = 2; i <= n; i++) // 计算任意一个n-1阶行列式的值就是答案.
+		{
+			for (int j = i + 1; j <= n; j++) {
+				while (!a[j][i].equals(new BigInteger("0"))) {
+					BigInteger t = a[i][i].divide(a[j][i]); // 如果要模,则这里就一下
+					for (int k = i; k <= n; k++)
+						a[i][k] = (a[i][k].subtract(a[j][k].multiply(t))); // 加一下
+					for (int k = i; k <= n; k++) {
+						BigInteger tmp = a[i][k];
+						a[i][k] = a[j][k];
+						a[j][k] = tmp;
+					}
+					ret = ret.multiply(new BigInteger("-1"));
+				}
+			}
+			if (a[i][i].compareTo(BigInteger.ZERO) == 0)
+				return new BigInteger("-1"); // 图无法联通.
+			ret = ret.multiply(a[i][i]); // 加一下
+		}
+		if (ret.compareTo(new BigInteger("0")) < 0) // 可以缩合为 ((ret % p ) + p ) % p ;
+			ret = ret.multiply(new BigInteger("-1"));
+		return ret;
+	} // 这个就是程序的主要函数,计算行列式的值.
+
+	public static void main(String[] args) {
+		int n;
+		Scanner in = new Scanner(System.in);
+		n = in.nextInt();
+		for (int i = 1; i <= n + 1; i++) {
+			for (int j = 1; j <= n + 1; j++) {
+				a[i][j] = BigInteger.ZERO;
+			}
+		}
+		for (int i = 1; i < n; i++) {
+			a[i][i + 1] = a[i + 1][i] = a[i][n + 1] = a[n + 1][i] = new BigInteger("-1");
+			du[i]++;
+			du[i + 1]++;
+			du[n + 1]++;
+			du[i]++;
+		}
+		a[1][n] = a[n][1] = new BigInteger("-1");
+		du[1]++;
+		du[n]++;
+		a[n][n + 1] = a[n + 1][n] = new BigInteger("-1");
+		du[n]++;
+		du[n + 1]++;
+		n++;
+		for (int i = 1; i <= n; i++)
+			a[i][i] = BigInteger.valueOf(du[i]);
+		System.out.println(det(n));
+	}
+
+}
+//HDU 4305 根据两点的距离不大于R，而且中间没有点建立一个图。之后就是求生成树计数了。
+/*
+Matrix-Tree定理(Kirchhoff矩阵-树定理)。Matrix-Tree定理是解决生成树计数问题最有力的武器之一。它首先于1847年被Kirchhoff证明。在介绍定理之前，我们首先明确几个概念：
+
+1、G的度数矩阵D[G]是一个n*n的矩阵，并且满足：当i≠j时,dij=0；当i=j时，dij等于vi的度数。
+
+2、G的邻接矩阵A[G]也是一个n*n的矩阵， 并且满足：如果vi、vj之间有边直接相连，则aij=1，否则为0。
+
+我们定义G的Kirchhoff矩阵(也称为拉普拉斯算子)C[G]为C[G]=D[G]-A[G]，则Matrix-Tree定理可以描述为：G的所有不同的生成树的个数等于其Kirchhoff矩阵C[G]任何一个n-1阶主子式的行列式的绝对值。所谓n-1阶主子式，就是对于r(1≤r≤n)，将C[G]的第r行、第r列同时去掉后得到的新矩阵，用Cr[G]表示。
+*/
+
+#include <stdio.h>
+#include <algorithm>
+#include <iostream>
+#include <string.h>
+#include <vector>
+#include <queue>
+#include <map>
+#include <set>
+#include <list>
+#include <string>
+#include <math.h>
+using namespace std;
+
+struct Point
+{
+    int x,y;
+    Point(int _x = 0,int _y = 0)
+    {
+        x = _x,y = _y;
+    }
+    Point operator - (const Point &b)const
+    {
+        return Point(x-b.x,y-b.y);
+    }
+    int operator ^(const Point &b)const
+    {
+        return x*b.y - y*b.x;
+    }
+    void input()
+    {
+        scanf("%d%d",&x,&y);
+    }
+};
+struct Line
+{
+    Point s,e;
+    Line() {}
+    Line(Point _s,Point _e)
+    {
+        s = _s;
+        e = _e;
+    }
+};
+bool onSeg(Point P,Line L)
+{
+    return
+        ((L.s-P)^(L.e-P)) == 0 &&
+        (P.x-L.s.x)*(P.x-L.e.x) <= 0 &&
+        (P.y-L.s.y)*(P.y-L.e.y) <= 0;
+}
+int sqdis(Point a,Point b)
+{
+    return (a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y);
+}
+
+const int MOD = 10007;
+int INV[MOD];
+//求ax = 1( mod m) 的x值，就是逆元(0<a<m)
+long long inv(long long a,long long m)
+{
+    if(a == 1)return 1;
+    return inv(m%a,m)*(m-m/a)%m;
+}
+struct Matrix
+{
+    int mat[330][330];
+    void init()
+    {
+        memset(mat,0,sizeof(mat));
+    }
+    int det(int n)//求行列式的值模上MOD，需要使用逆元
+    {
+        for(int i = 0; i < n; i++)
+            for(int j = 0; j < n; j++)
+                mat[i][j] = (mat[i][j]%MOD+MOD)%MOD;
+        int res = 1;
+        for(int i = 0; i < n; i++)
+        {
+            for(int j = i; j < n; j++)
+                if(mat[j][i]!=0)
+                {
+                    for(int k = i; k < n; k++)
+                        swap(mat[i][k],mat[j][k]);
+                    if(i != j)
+                        res = (-res+MOD)%MOD;
+                    break;
+                }
+            if(mat[i][i] == 0)
+            {
+                res = -1;//不存在(也就是行列式值为0)
+                break;
+            }
+            for(int j = i+1; j < n; j++)
+            {
+                //int mut = (mat[j][i]*INV[mat[i][i]])%MOD;//打表逆元
+                int mut = (mat[j][i]*inv(mat[i][i],MOD))%MOD;
+                for(int k = i; k < n; k++)
+                    mat[j][k] = (mat[j][k]-(mat[i][k]*mut)%MOD+MOD)%MOD;
+            }
+            res = (res * mat[i][i])%MOD;
+        }
+        return res;
+    }
+};
+
+Point p[330];
+int n,R;
+bool check(int k1,int k2)//判断两点的距离小于等于R，而且中间没有点阻隔
+{
+    if(sqdis(p[k1],p[k2]) > R*R)return false;
+    for(int i = 0; i < n; i++)
+        if(i!=k1 && i!=k2)
+            if(onSeg(p[i],Line(p[k1],p[k2])))
+                return false;
+    return true;
+}
+int g[330][330];
+int main()
+{
+    //预处理逆元
+    for(int i = 1; i < MOD; i++)
+        INV[i] = inv(i,MOD);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d%d",&n,&R);
+        for(int i = 0; i < n; i++)
+            p[i].input();
+        memset(g,0,sizeof(g));
+        for(int i = 0; i < n; i++)
+            for(int j = i+1; j <n; j++)
+                if(check(i,j))
+                    g[i][j] = g[j][i] = 1;
+        Matrix ret;
+        ret.init();
+        for(int i = 0; i < n; i++)
+            for(int j = 0; j < n; j++)
+                if(i != j && g[i][j])
+                {
+                    ret.mat[i][j] = -1;
+                    ret.mat[i][i]++;
+                }
+        printf("%d\n",ret.det(n-1));
+    }
+    return 0;
+}

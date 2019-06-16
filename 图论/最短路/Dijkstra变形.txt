@@ -1,0 +1,109 @@
+变形1：(poj2253) 求两点之间所有路径最小的最大长度边，松弛操作改为
+            if(max(f.w,t.w)<dis[t.p])
+            {
+                dis[t.p]=max(f.w,t.w);
+                pq.push(node(t.p,dis[t.p]));
+            }
+变形2：(poj1797) 求两点之间所有路径最大的最小长度边，改动较大，如下：
+void Dijkstra(int now)
+{
+    for(int i=0; i<=n; i++) dis[i]=-1;
+    dis[now]=INF;
+    priority_queue <node> pq;
+    pq.push(node(now,dis[now]));
+    while(!pq.empty())
+    {
+        node f=pq.top();
+        pq.pop();
+        for(int i=0; i<eg[f.p].size(); i++)
+        {
+            node t=eg[f.p][i];
+            if(dis[t.p]<min(t.w,f.w))
+            {
+                dis[t.p]=min(t.w,f.w);
+                pq.push(node(t.p,dis[t.p]));
+            }
+        }
+    }
+}
+变形3：乘积最短路 取log2取值然后存入边中，其余过程不变，最后输出最短路qpow(2,dis[i])。
+例题链接：https://ac.nowcoder.com/acm/contest/283/H
+变形4：某些点限制遍历次数求1到n最短路(牛客370B)
+只能穿过不超过 K 次被戒严的城镇。被戒严的城镇用1表示，其他用0表示。
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=500010;
+const int INF=0x3f3f3f3f;
+struct node
+{
+    int p,w,c;
+    node(int a,int b,int d=0)
+    {
+        p=a;
+        w=b;
+        c=d;
+    }
+    friend bool operator<(node a,node b) //权值小的先出队
+    {
+        if(a.w!=b.w) return a.w>b.w;
+        return a.p>b.p;
+    }
+};
+vector <node> eg[maxn];
+int dis[maxn][11],n,f[maxn];
+int u,v,m,k,w;
+void addedge(int u,int v,int w)
+{
+    eg[u].push_back(node(v,w));
+}
+void Dijkstra(int now)
+{
+    memset(dis,INF,sizeof(dis));
+    dis[now][f[now]]=0;
+    priority_queue <node> pq;
+    pq.push(node(now,0,f[now]));
+    while(!pq.empty())
+    {
+        node fr=pq.top();
+        pq.pop();
+        for(int i=0; i<eg[fr.p].size(); i++)
+        {
+            node t=eg[fr.p][i];
+            int tmp=f[t.p]+fr.c;
+            if(tmp>k)
+                continue;
+            if(dis[t.p][tmp]>t.w+fr.w)
+            {
+                dis[t.p][tmp]=t.w+fr.w;
+                pq.push(node(t.p,dis[t.p][tmp],tmp));
+            }
+        }
+    }
+
+}
+int main()
+{
+    while(scanf("%d%d%d",&n,&m,&k)!=EOF)
+    {
+        for(int i=1; i<=n; i++) eg[i].clear(),cin>>f[i];
+        while(m--)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            addedge(u,v,w);
+            addedge(v,u,w);
+        }
+        f[n]=0;
+        Dijkstra(1);
+        int ans=INF;
+        for(int i=0;i<=k;i++)
+        {
+            ans=min(ans,dis[n][i]);
+        }
+        if(ans==INF)
+            puts("-1");
+        else
+            printf("%d\n",ans);
+    }
+    return 0;
+}
+

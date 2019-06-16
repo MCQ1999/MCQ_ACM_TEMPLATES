@@ -1,0 +1,131 @@
+/*
+无向图G为二分图的充分必要条件是：G至少有两个顶点,且当存在回路时，其所有回路的长度均为偶数。回路就是环路，也就是判断是否存在奇数环。判断二分图方法：用染色法，把图中的点染成黑色和白色。首先取一个点染成白色，然后将其相邻的点染成黑色，如果发现有相邻且同色的点，那么就退出，可知这个图并非二分图。
+*/
+//dfs法
+#include<cstdio>
+#include<cstring>
+#include<vector>
+using namespace std;
+const int maxn=1e5+10;
+vector<int> g[maxn];
+int n,m,col[maxn],flag;//col:0,1,-1分别为未染色，染黑，染白
+void dfs(int x,int color)
+{
+    col[x]=color;
+    for(int i=0;i<g[x].size();i++)
+    {
+        int v=g[x][i];
+        if(col[v]==col[x])
+        {
+            flag=1;
+            return ;
+        }
+        if(!col[v])
+            dfs(v,-color);
+    }
+}
+int main()
+{
+    while(~scanf("%d%d",&n,&m))
+    {
+        for(int i=0;i<maxn;i++)
+        {
+            g[i].clear();
+        }
+        for(int i=0;i<m;i++)
+        {
+            int u,v;
+            scanf("%d%d",&u,&v);
+            g[u].push_back(v);
+            g[v].push_back(u);
+        }
+        flag=0;
+        memset(col,0,sizeof(col));
+        for(int i=1;i<=n&&!flag;i++)
+        {
+            if(!col[i])
+            {
+                dfs(i,1);
+            }
+        }
+        if(flag)
+        {
+            puts("No");
+        }
+        else
+        {
+            puts("Yes");
+        }
+    }
+    return 0;
+}
+
+//bfs法
+#include<cstdio>
+#include<cstring>
+#include<vector>
+#include<queue>
+using namespace std;
+const int maxn=1e5+10;
+vector<int> g[maxn];
+int n,m,col[maxn],flag;//col:0,1,-1分别为未染色，染黑，染白
+void bfs(int s)
+{
+    queue<int> q;
+    q.push(s);
+    col[s]=1;
+    while(!q.empty())
+    {
+        int f=q.front();
+        q.pop();
+        for(int i=0; i<g[f].size(); i++)
+        {
+            int v=g[f][i];
+            if(!col[v])
+            {
+                q.push(v);
+                col[v]=-col[f];
+            }
+            if(col[f]==col[v])
+            {
+                flag=1;
+                return ;
+            }
+        }
+    }
+}
+int main()
+{
+    while(~scanf("%d%d",&n,&m))
+    {
+        for(int i=0;i<maxn;i++)
+        {
+            g[i].clear();
+        }
+        for(int i=0; i<m; i++)
+        {
+            int u,v;
+            scanf("%d%d",&u,&v);
+            g[u].push_back(v);
+            g[v].push_back(u);
+        }
+        flag=0;
+        memset(col,0,sizeof(col));
+        for(int i=1; i<=n&&!flag; i++)
+        {
+            if(!col[i])
+            {
+                bfs(i);
+            }
+        }
+        if(flag)
+        {
+            puts("No");
+        }
+        else
+        {
+            puts("Yes");
+        }
+    }
+    return 0;
+}

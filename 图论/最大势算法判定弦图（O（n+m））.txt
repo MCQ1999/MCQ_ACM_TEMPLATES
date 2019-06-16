@@ -1,0 +1,109 @@
+由定理：“一个无向图是弦图当且仅当它有一个完美消除序列”。
+考虑求出一个序列并验证其是否为完美消除序列。
+
+最大势算法MCS
+倒序求出vn,……,v1（逐个标出n-1），设fi表示点i与多少个已标号点相邻，每次选fi最大的未标号点标号。
+验证是否为完美消除序列：
+设vi+1,……,vn中与vi相邻的下标最小（v中排列最靠前）点为vj，只需要判断vj是否与其后所有与vi相邻的点相邻即可。
+n比较小时，可以邻接矩阵判边的存在性。
+
+洛谷sp5446
+
+#include<bits/stdc++.h>
+#define pb push_back
+using namespace std;
+const int N=1010,M=4e6+10;
+
+int n,m,g[N][N],q[N],f[N],rk[N];
+int head[N],to[M],nxt[M],tot;
+vector<int>eg[N];
+bool vis[N];
+
+inline void lk(int u,int v)
+{
+    to[++tot]=v;
+    nxt[tot]=head[u];
+    head[u]=tot;
+}
+
+void MSC()
+{
+    int i,j,x,y,bst=0;
+    for(i=1; i<=n; ++i) lk(0,i);
+    for(j=n; j>0; --j)
+    {
+        for(;;)
+        {
+            for(int &i=head[bst]; i; i=nxt[i])
+                if(!vis[to[i]]) break;
+            if(head[bst])
+            {
+                x=to[head[bst]];
+                q[j]=x;
+                rk[x]=j;
+                vis[x]=true;
+                for(i=eg[x].size()-1; i>=0; --i) if(!vis[eg[x][i]])
+                    {
+                        y=eg[x][i];
+                        f[y]++;
+                        lk(f[y],y);
+                        bst=max(bst,f[y]);
+                    }
+                break;
+            }
+            else bst--;
+        }
+    }
+}
+
+int stk[N],top;
+
+bool ck()
+{
+    int i,j,x,y,mng,mnv;
+    for(j=n; j>0; --j)
+    {
+        x=q[j];
+        top=0;
+        mng=n+1;
+        for(i=eg[x].size()-1; i>=0; --i) if(rk[eg[x][i]]>j)
+            {
+                y=eg[x][i];
+                stk[++top]=y;
+                if(rk[y]<mng) mng=rk[y],mnv=y;
+            }
+        if(mng==n+1) continue;
+        for(i=1; i<=top; ++i) if(stk[i]!=mnv)
+                if(!g[mnv][stk[i]]) return false;
+    }
+    return true;
+}
+
+int main()
+{
+    int i,j,x,y;
+    while(~scanf("%d%d",&n,&m))
+    {
+        if(!n&&!m) break;
+        tot=0;
+        memset(head,0,sizeof(head));
+        memset(vis,0,sizeof(vis));
+        memset(g,0,sizeof(g));
+        for(int i=1;i<=n;i++)
+        {
+            eg[i].clear();
+        }
+        for(i=1; i<=m; ++i)
+        {
+            scanf("%d%d",&x,&y);
+            g[x][y]=g[y][x]=1;
+            eg[x].pb(y);
+            eg[y].pb(x);
+        }
+        MSC();
+        if(ck()) puts("Perfect");
+        else puts("Imperfect");
+    }
+
+    return 0;
+}

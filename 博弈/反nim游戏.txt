@@ -1,0 +1,33 @@
+//洛谷p4279
+题意：
+Alice和Bob轮流取N堆石子。每次只能从一堆中取出任意数目的石子，但不能不取。取走最后一个石子者败。
+结论：
+1.若当前每堆石子数都为1,且石子堆数为奇数,则先手必败,为偶数,先手必胜
+2.若某一堆石子数>1且各堆石子异或和不为0,则先手必胜
+
+#include<bits/stdc++.h>
+using namespace std;
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int t;
+    cin>>t;
+    while(t--)
+    {
+        int n,f1=0,f2=0,sum=0;
+        cin>>n;
+        for(int i=1;i<=n;i++)
+        {
+            int x;
+            cin>>x;
+            if(x!=1) f1=1;
+            if(x>1) f2=1;
+            sum^=x;
+        }
+        if(!f1&&(n&1)) cout<<"Brother"<<endl;
+        else if(!f1&&!(n&1)) cout<<"John"<<endl;
+        else if(f2&&sum!=0) cout<<"John"<<endl;
+        else cout<<"Brother"<<endl;
+    }
+    return 0;
+}

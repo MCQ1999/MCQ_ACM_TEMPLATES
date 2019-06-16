@@ -1,0 +1,20 @@
+//toPlainString:不使用任何指数,toString:有必要时使用科学计数法,stripTrailingZeros():移除尾0
+import java.math.BigDecimal;
+import java.util.Scanner;
+public class Main{
+	public static void main(String args[]) {
+		Scanner cin=new Scanner(System.in);
+		while(cin.hasNext())
+		{	
+			BigDecimal a=cin.nextBigDecimal(),b=cin.nextBigDecimal();
+			System.out.println(a.add(b).stripTrailingZeros().toPlainString());
+		}
+    }
+}
+
+/*
+去除小数点前面的0
+String s = ans.stripTrailingZeros().toPlainString();
+if (s.startsWith("0."))
+System.out.println(s.substring(1));
+*/

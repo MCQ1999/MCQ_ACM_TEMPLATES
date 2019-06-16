@@ -1,0 +1,27 @@
+vector<int> G[maxn];
+int in[maxn];           //入度
+int topo[maxn], t;
+bool topoSort()
+{
+    priority_queue<int, vector<int>, greater<int> > q;
+    t = 0;	//优先队列保证最小序列
+    for(int i = 1; i <= n; ++i)
+    {
+        if(in[i] == 0) q.push(i);
+    }
+    int cnt = 0;
+    while(!q.empty())
+    {
+        int u = q.top();
+        q.pop();
+        topo[t++] = u;
+        ++cnt;
+        for(int v = 0; v < G[u].size(); ++v)
+        {
+            if(--in[G[u][v]] == 0) q.push(G[u][v]);				//找入度为0的边入队
+        }
+    }
+    if(cnt != n) return 0;										//有环
+    return 1;
+}
+

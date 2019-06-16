@@ -1,0 +1,30 @@
+变形1：(poj2253) 求两点之间所有路径最小的最大长度边，松弛操作改为
+            if(max(f.w,t.w)<dis[t.p])
+            {
+                dis[t.p]=max(f.w,t.w);
+                pq.push(node(t.p,dis[t.p]));
+            }
+变形2：(poj1797) 求两点之间所有路径最大的最小长度边，改动较大，如下：
+void Dijkstra(int now)
+{
+    for(int i=0; i<=n; i++) dis[i]=-1;
+    dis[now]=INF;
+    priority_queue <node> pq;
+    pq.push(node(now,dis[now]));
+    while(!pq.empty())
+    {
+        node f=pq.top();
+        pq.pop();
+        for(int i=0; i<eg[f.p].size(); i++)
+        {
+            node t=eg[f.p][i];
+            if(dis[t.p]<min(t.w,f.w))
+            {
+                dis[t.p]=min(t.w,f.w);
+                pq.push(node(t.p,dis[t.p]));
+            }
+        }
+    }
+}
+变形3：乘积最短路 取log2取值然后存入边中，其余过程不变，最后输出最短路qpow(2,dis[i])。
+例题链接：https://ac.nowcoder.com/acm/contest/283/H

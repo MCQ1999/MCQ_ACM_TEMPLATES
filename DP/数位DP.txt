@@ -1,0 +1,157 @@
+1.万能板
+#include<bits/stdc++.h>
+#define ll long long
+#define int long long
+int a[20];
+ll dp[20][2];//不同题目状态不同
+ll dfs(int pos,/*state变量*/,bool lead/*前导零*/,bool limit/*数位上界变量*/)//不是每个题都要判断前导零
+{
+    //递归边界，既然是按位枚举，最低位是0，那么pos==-1说明这个数我枚举完了
+    if(pos==-1) return 1;/*这里一般返回1，表示你枚举的这个数是合法的，那么这里就需要你在枚举时必须每一位都要满足题目条件，也就是说当前枚举到pos位，一定要保证前面已经枚举的数位是合法的。不过具体题目不同或者写法不同的话不一定要返回1 */
+    //第二个就是记忆化(在此前可能不同题目还能有一些剪枝)
+    if(!limit && !lead && dp[pos][state]!=-1) return dp[pos][state];
+    /*常规写法都是在没有限制的条件记忆化，这里与下面记录状态是对应，具体为什么是有条件的记忆化后面会讲*/
+    int up=limit?a[pos]:9;//根据limit判断枚举的上界up
+    ll ans=0;
+    //开始计数
+    for(int i=0;i<=up;i++)//枚举，然后把不同情况的个数加到ans就可以了
+    {
+        if() ...
+        else if()...
+        ans+=dfs(pos-1,/*状态转移*/,lead && i==0,limit && i==a[pos]); //最后两个变量传参都是这样写的
+        /*这里还算比较灵活，不过做几个题就觉得这里也是套路了
+        大概就是说，我当前数位枚举的数是i，然后根据题目的约束条件分类讨论
+        去计算不同情况下的个数，还有要根据state变量来保证i的合法性，比如题目
+        要求数位上不能有62连续出现,那么就是state就是要保存前一位pre,然后分类，
+        前一位如果是6那么这意味就不能是2，这里一定要保存枚举的这个数是合法*/
+    }
+    //计算完，记录状态
+    if(!limit && !lead) dp[pos][state]=ans;
+    /*这里对应上面的记忆化，在一定条件下时记录，保证一致性，当然如果约束条件不需要考虑lead，这里就是lead就完全不用考虑了*/
+    return ans;
+}
+ll solve(ll x)
+{
+    int pos=0;
+    while(x)//把数位都分解出来
+    {
+        a[pos++]=x%10;//个人老是喜欢编号为[0,pos),看不惯的就按自己习惯来，反正注意数位边界就行
+        x/=10;
+    }
+    return dfs(pos-1/*从最高位开始枚举*/,/*一系列状态 */,true,true);//刚开始最高位都是有限制并且有前导零的，显然比最高位还要高的一位视为0嘛
+}
+signed main()
+{
+    ll l,r;
+    while(~scanf("%lld%lld",&l,&r))
+    {
+        //初始化dp数组为-1
+        printf("%lld\n",solve(r)-solve(l-1));
+    }
+}
+
+
+2.HDU 2089 不含62和4
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=200005;
+const int mod=1e9+7;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+int a[65],dp[65][2];
+int dfs(int pos,int if6,int limit)//pos:枚举到第几位 if6:前一位是否为6 limit:前一位是否达到上限
+{
+    if(pos==0) return 1; //枚举到个位
+    if(!limit&&dp[pos][if6])    return dp[pos][if6]; //如果上一位没有到上限且dp记忆过，直接返回
+    int up=limit?a[pos]:9; //上一位有限制就只枚举到这一位上的数，否则0~9都要枚举
+    int ans=0; //记录数量
+    for(int i=0;i<=up;i++)
+    {
+        if(i==4)    continue;//剪掉含4的数
+        if(if6&&i==2)   continue;//剪掉上一位是6且这一位是2的数
+        ans+=dfs(pos-1,i==6,limit&&i==up);//往低位枚举，这一位是不是6，上一位和这一位是否达到上限
+    }
+    if(!limit) //如果没有达到上限，那么可以记忆
+        dp[pos][if6]=ans;
+    return ans;
+}
+int solve(int x)
+{
+    int cnt=0;
+    while(x)
+    {
+        a[++cnt]=x%10;
+        x/=10;
+    }
+    return dfs(cnt,0,1);//从最高位枚举
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n,m;
+    while(cin>>n>>m&&n+m)
+    {
+        cout<<solve(m)-solve(n-1)<<endl;
+    }
+    return 0;
+}
+
+3.统计0~9在1~n各出现了多少次
+#include<cstdio>
+#include<cstring>
+using namespace std;
+typedef long long ll;
+const int N = 15;
+ll f[N][2][N][2];
+int num[N];  //num来存这个数每个位子上的数码
+/*
+记忆化搜索。
+len是当前为从高到低第几位。issmall表示当前位是否和num[len]相等，0是相等，1是不相等。
+sum表示当前数字出现的次数。zero表示之前是否是前导0。d是当前在算的数码。
+*/
+ll dfs(int len, bool issmall, int sum, bool zero, int d)
+{
+    ll ret = 0;
+    if (len == 0) return sum;  //边界条件
+    if (f[len][issmall][sum][zero] != -1) return f[len][issmall][sum][zero];  //记忆化
+    for (int i = 0; i < 10; i ++){
+        if (!issmall && i > num[len]) break;
+        /*
+        由于我们是从高位到低位枚举的，所以如果之前一位的数码和最大数的数码相同，这一位就只能枚举到num[len]；
+        否则如果之前一位比最大数的数码小，那这一位就可以从0~9枚举了。
+        */
+        ret += dfs(len-1, issmall || (i<num[len]), sum+((!zero || i) && (i==d)), zero && (i == 0), d);
+        /*
+        继续搜索，数位减一，issmall的更新要看之前有没有相等，且这一位有没有相等；
+        sum的更新要看之前是否为前导0或者这一位不是0；
+        zero的更新就看之前是否为前导0且这一位继续为0；
+        d继续传进去。
+        */
+    }
+    f[len][issmall][sum][zero] = ret;
+    //记忆化，把搜到的都记下来
+    return ret;
+}
+ll solve(ll x, int d)
+{
+    int len = 0;
+    while (x){
+        num[++ len] = x%10;
+        x /= 10;
+    } //数字转数位
+    memset(f, -1, sizeof f); //初始化
+    return dfs(len, 0, 0, 1, d); //开始在第len位上，最高位只能枚举到num[len]所以issmall是0，sum=0，有前导0。
+}
+int main()
+{
+    ll k; //注意都要开long long
+    while(~scanf("%lld", &k))
+    {
+         for (int i = 0; i < 10; i ++)
+            printf("%lld\n", solve(k, i));
+    }
+    return 0;
+}

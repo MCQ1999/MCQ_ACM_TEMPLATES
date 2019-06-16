@@ -1,0 +1,136 @@
+//poj 2942 点双连通分量+二分图判断+补图
+亚瑟王要在圆桌上召开骑士会议，为了不引发骑士之间的冲突，并且能够让会议的议题有令人满意的结果，每次开会前都必须对出席会议的骑士有如下要求：1、相互憎恨的两个骑士不能坐在直接相邻的2个位置；2、出席会议的骑士数必须是奇数，这是为了让投票表决议题时都能有结果。如果出现有某些骑士无法出席所有会议（例如这个骑士憎恨所有的其他骑士），则亚瑟王为了世界和平会强制把他剔除出骑士团。现在给定准备去开会的骑士数n，再给出m对憎恨对（表示某2个骑士之间使互相憎恨的），问亚瑟王至少要剔除多少个骑士才能顺利召开会议？
+#include<iostream>
+#include<cstring>
+#include<cstdio>
+using namespace std;
+const int N = 1010;
+const int M = 2000010;
+struct Edge
+{
+    int to,next;
+
+} edge[M];
+int head[N],tot;
+int low[N],dfn[N],sta[N],belong[N];
+int id,top;
+int block;//点双连通分量的个数
+bool insta[N];
+bool can[N];
+bool ok[N];//标记
+int tmp[N];//暂时存储双连通分量中的点
+int cc;//tmp 的计数
+int color[N];//染色
+void add(int u,int v)
+{
+    edge[tot].to = v;
+    edge[tot].next = head[u];
+    head[u] = tot++;
+}
+//染色判断二分图
+bool dfs(int u,int col)
+{
+    color[u] = col;
+    for(int i = head[u]; i != -1; i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if( !ok[v] )continue;
+        if(color[v] != -1)
+        {
+            if(color[v]==col)return false;
+            continue;
+        }
+        if(!dfs(v,!col))return false;
+    }
+    return true;
+}
+void Tarjan(int u,int pre)
+{
+    int v;
+    low[u] = dfn[u] = ++id;
+    sta[top++] = u;
+    insta[u] = true;
+    int pre_cnt = 0;
+    for(int i = head[u]; i != -1; i = edge[i].next)
+    {
+        v = edge[i].to;
+        if(v == pre && pre_cnt == 0)
+        {
+            pre_cnt++;
+            continue;
+        }
+        if( !dfn[v] )
+        {
+            Tarjan(v,u);
+            if(low[u] > low[v])low[u] = low[v];
+            if( low[v] >= dfn[u])
+            {
+                block++;
+                int vn;
+                cc = 0;
+                memset(ok,false,sizeof(ok));
+                do
+                {
+                    vn = sta[--top];
+                    belong[vn] = block;
+                    insta[vn] = false;
+                    ok[vn] = true;
+                    tmp[cc++] = vn;
+                }
+                while( vn!=v );
+                ok[u] = 1;
+                memset(color,-1,sizeof(color));
+                if( !dfs(u,0) )
+                {
+                    can[u] = true;
+                    while(cc--) can[tmp[cc]]=true;
+                }
+            }
+        }
+        else if(insta[v] && low[u] > dfn[v])
+            low[u] = dfn[v];
+    }
+}
+void solve(int n)
+{
+    memset(dfn,0,sizeof(dfn));
+    memset(insta,false,sizeof(insta));
+    id = block = top = 0;
+    memset(can,false,sizeof(can));
+    for(int i = 1; i <= n; i++)
+        if(!dfn[i])
+            Tarjan(i,-1);
+    int ans = n;
+    for(int i = 1; i <= n; i++)
+        if(can[i])
+            ans--;
+    printf("%d\n",ans);
+}
+void init()
+{
+    tot = 0;
+    memset(head,-1,sizeof(head));
+}
+int g[N][N];
+int main()
+{
+    int n,m;
+    int u,v;
+    while(scanf("%d%d",&n,&m)==2)
+    {
+        if(n==0 && m==0)break;
+        init();
+        memset(g,0,sizeof(g));
+        while(m--)
+        {
+            scanf("%d%d",&u,&v);
+            g[u][v]=g[v][u]=1;
+        }
+        for(int i = 1; i <= n; i++)
+            for(int j = 1; j <= n; j++)
+                if(i != j && g[i][j]==0)
+                    add(i,j);
+        solve(n);
+    }
+    return 0;
+}

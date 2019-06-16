@@ -1,0 +1,92 @@
+//×Ö·û´®°æ
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=1e3+10;
+int dp[maxn][maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    string s1,s2;
+    while(cin>>s1>>s2)
+    {
+        memset(dp,0,sizeof(dp));
+        int l1=s1.length(),l2=s2.length();
+        for(int i=1;i<=l1;i++)
+        {
+            for(int j=1;j<=l2;j++)
+            {
+                if(s1[i-1]==s2[j-1])
+                {
+                    dp[i][j]=dp[i-1][j-1]+1;
+                }
+                else
+                {
+                    dp[i][j]=max(dp[i-1][j],dp[i][j-1]);
+                }
+            }
+        }
+        cout<<dp[l1][l2]<<endl;
+    }
+    return 0;
+}
+//Êä³ö×ÓÐòÁÐ
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=1005;
+const int mod=1e9+7;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+int dp[maxn][maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    string s1,s2;
+    while(cin>>s1>>s2)
+    {
+        memset(dp,0,sizeof(dp));
+        int l1=s1.length(),l2=s2.length();
+        for(int i=1; i<=l1; i++)
+        {
+            for(int j=1; j<=l2; j++)
+            {
+                if(s1[i-1]==s2[j-1])
+                {
+                    dp[i][j]=dp[i-1][j-1]+1;
+                }
+                else
+                {
+                    dp[i][j]=max(dp[i-1][j],dp[i][j-1]);
+                }
+            }
+        }
+        int i=l1,j=l2;
+        stack<char> s;
+        while(i&&j)
+        {
+            if(s1[i-1]==s2[j-1])
+            {
+                i--;
+                j--;
+                s.push(s1[i]);
+            }
+            else if(dp[i-1][j]>dp[i][j-1])
+            {
+                i--;
+            }
+            else if(dp[i-1][j]<=dp[i][j-1])
+            {
+                j--;
+            }
+        }
+        while(!s.empty())
+        {
+            cout<<s.top();
+            s.pop();
+        }
+        cout<<endl;
+    }
+    return 0;
+}

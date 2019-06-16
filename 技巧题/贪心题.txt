@@ -1,0 +1,87 @@
+1.洛谷p1016
+题意：一个旅行家想驾驶汽车以最少的费用从一个城市到另一个城市（假设出发时油箱是空的）。给定两个城市之间的距离D1、汽车油箱的容量C（以升为单位）、每升汽油能行驶的距离D2、出发点每升汽油价格P和沿途油站数N（N可以为零），油站i离出发点的距离Di、每升汽油价格Pi（i=1,2,…,Ni=1,2,…,N）。计算结果四舍五入至小数点后两位。如果无法到达目的地，则输出“No Solution”。
+思路：找距离当前可达的点的最便宜的点，如果这个点比当前的点价格还高，那就在这一站加满油;如果这个点比当前价格低，那就只加够到那个点的油。注意这两种情况都要考虑是不是可以直接到目的地了。
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=10;
+struct node
+{
+    double price,dis;
+    bool operator<(node b)
+    {
+        return dis<b.dis;
+    }
+};
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    double d1,c,d2,p;
+    int n;
+    cin>>d1>>c>>d2>>p>>n;
+    node g[maxn];
+    g[0].price=p,g[0].dis=d2;
+    for(int i=1; i<=n; i++)
+    {
+        cin>>g[i].dis>>g[i].price;
+    }
+    sort(g+1,g+n+1);
+    double ans=0;
+    double nowd=0,nowc=0,nowp=p;
+    int gg=1;
+    while(1)
+    {
+        int flag=0;
+        double mi=inf,md=0;
+        for(int i=1; i<=n; i++)
+        {
+            if(g[i].dis>nowd&&g[i].dis-nowd<=c*d2&&g[i].price<mi)
+            {
+                mi=g[i].price;
+                md=g[i].dis;
+                flag=1;
+            }
+        }
+        if(d1-nowd>c*d2&&!flag)
+        {
+            cout<<"No Solution"<<endl;
+            gg=0;
+            break;
+        }
+        else if(flag)
+        {
+            if(mi>nowp)
+            {
+                if(c*d2>=d1-nowd)
+                {
+                    if(nowc<(d1-nowd)/d2)
+                        ans+=((d1-nowd)/d2-nowc)*nowp;
+                    break;
+                }
+                ans+=(nowp*(c-nowc));
+                nowc=c-(md-nowd)/d2;
+                nowd=md;
+                nowp=mi;
+            }
+            else
+            {
+                ans+=(nowp*(md-nowd)/d2);
+                nowc=0;
+                nowd=md;
+                nowp=mi;
+            }
+        }
+        else if(nowd-d1<=nowc*d2)
+        {
+            if(nowc<(d1-nowd)/d2)
+                ans+=((d1-nowd)/d2-nowc)*nowp;
+            break;
+        }
+    }
+    if(gg)
+        cout<<fixed<<setprecision(2)<<ans<<endl;
+    return 0;
+}
+
+

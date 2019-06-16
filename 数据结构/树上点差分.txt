@@ -1,0 +1,88 @@
+洛谷p3128
+一棵树，n个点,n-1条边,m个操作，将u到v路径上的点权+1，问操作完最大点权。
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int N=1e5+5;
+int cha[N],head[N],nxt[N],to[N],tot=0,f[30][N];
+void add(int u,int v)
+{
+    tot++;
+    nxt[tot]=head[u];
+    to[tot]=v;
+    head[u]=tot;
+}
+int d[N];
+void dfs(int u,int dep)
+{
+    d[u]=dep;
+    for(int i=head[u];~i;i=nxt[i])
+    {
+        int v=to[i];
+        if(!d[v])   dfs(v,dep+1),f[0][v]=u;
+    }
+}
+int lca(int u,int v)
+{
+    if(d[u]<d[v]) swap(u,v);
+    for(int i=20;i>=0;i--)
+    {
+        if(d[v]<=(d[u]-(1<<i)))
+            u=f[i][u];
+    }
+    if(u==v) return u;
+    for(int i=20;i>=0;i--)
+    {
+        if(f[i][u]!=f[i][v])
+            u=f[i][u],v=f[i][v];
+    }
+    return f[0][u];
+}
+int ans=0;
+void dfs(int u)
+{
+    for(int i=head[u];~i;i=nxt[i])
+    {
+        int v=to[i];
+        if(v==f[0][u]) continue;
+        dfs(v);
+        cha[u]+=cha[v];
+    }
+    ans=max(ans,cha[u]);
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int n,m;
+    while(cin>>n>>m)
+    {
+        memset(head,-1,sizeof(head));
+        memset(cha,0,sizeof(cha));
+        ans=0;
+        for(int i=0;i<n-1;i++)
+        {
+            int u,v;
+            cin>>u>>v;
+            add(u,v),add(v,u);
+        }
+        f[0][1]=1;
+        dfs(1,1);
+        for(int i=1;(1<<i)<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                f[i][j]=f[i-1][f[i-1][j]];
+            }
+        }
+        for(int i=0;i<m;i++)
+        {
+            int u,v;
+            cin>>u>>v;
+            int fa=lca(u,v);
+            cha[u]++,cha[v]++,cha[fa]--,cha[f[0][fa]]--;
+        }
+        dfs(1);
+        cout<<ans<<endl;
+    }
+    return 0;
+}

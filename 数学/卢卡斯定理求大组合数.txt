@@ -1,0 +1,48 @@
+//p必须为小素数
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+typedef long long ll;
+const int N =150000;
+ll n, m, p, fac[N];
+void init()//预处理阶乘
+{
+    int i;
+    fac[0]=1;
+    for(i=1; i<=p; i++)
+        fac[i]=fac[i-1]*i%p;
+}
+ll qpow(ll a, ll b)//快速幂
+{
+    ll t=a%p,ans=1;
+    while(b)
+    {
+        if(b&1)  ans=ans*t%p;
+        t=t*t%p;
+        b>>=1;
+    }
+    return ans;
+}
+ll C(ll n, ll m)//C(n,m)
+{
+    if(m>n)  return 0;
+    return  fac[n]*qpow(fac[m]*fac[n-m],p-2)%p;
+}
+ll Lucas(ll n, ll m)//大组合数C(n,m)
+{
+    if(m ==0) return 1;
+    else return (C(n%p,m%p)*Lucas(n/p,m/p))%p;
+}
+int main()
+{
+    int t;
+    scanf("%d",&t);
+    while(t--)
+    {
+        scanf("%lld%lld%lld", &n, &m, &p);
+        init();
+        printf("%lld\n", Lucas(n+m, n));
+    }
+    return 0;
+}

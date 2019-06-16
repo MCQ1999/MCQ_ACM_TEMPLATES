@@ -1,0 +1,133 @@
+#include<cmath>
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#define mid (l+r)/2
+const int N=2e5+5;
+using namespace std;
+int n,m,s,tot=0,cnt=0;
+int head[N],nxt[N],to[N],val[N];
+int fir[N],order[N],depth[N];
+int f[20][N],rec[20][N],sz;
+struct edge
+{
+    int u,v,w;
+};
+int all = 0;
+int a[N], b[N], T[N];
+int sum[N<<5], L[N<<5], R[N<<5];
+inline int build(int l, int r)
+{
+    int rt = ++ all;
+    sum[rt] = 0;
+    if (l < r)
+    {
+        L[rt] = build(l, mid);
+        R[rt] = build(mid+1, r);
+    }
+    return rt;
+}
+
+inline int update(int pre, int l, int r, int x)
+{
+    int rt = ++ all;
+    L[rt] = L[pre];
+    R[rt] = R[pre];
+    sum[rt] = sum[pre]+1;
+    if (l < r)
+    {
+        if (x <= mid) L[rt] = update(L[pre], l, mid, x);
+        else R[rt] = update(R[pre], mid+1, r, x);
+    }
+    return rt;
+}
+int lca(int l,int r)
+{
+    l=fir[l],r=fir[r];
+    if(l>r) swap(l,r);
+    int k=0;
+    while((1<<k)<=r-l+1) k++;
+    k--;
+    if(f[k][l]<f[k][r-(1<<k)+1]) return rec[k][l];
+    else return rec[k][r-(1<<k)+1];
+}
+
+inline int query(int u, int v, int l, int r, int k,int fa)
+{
+    if(r<=k)
+        return sum[u]+sum[v]-2*sum[fa];
+    int ans=0;
+    ans+=query(L[u], L[v], l, mid, k,L[fa]);//[1,mid]肯定小于k
+    if(k>mid)
+    ans+=query(R[u], R[v], mid+1, r, k,R[fa]);//还有[mid+1,k]
+    return ans;
+}
+void addedge(int x,int y,int w)
+{
+    cnt++;
+    nxt[cnt]=head[x];
+    head[x]=cnt;
+    val[cnt]=w;
+    to[cnt]=y;
+}
+void dfs(int u,int dep)//dfs处理出三个数组
+{
+    fir[u]=++tot,order[tot]=u,depth[tot]=dep;
+    for(int i=head[u]; i!=-1; i=nxt[i])
+    {
+        int v=to[i];
+        if(!fir[v])
+        {
+            T[v]=update(T[u],1,sz,val[i]); //对每个子节点建立一颗指向父节点的线段树
+            dfs(v,dep+1);
+            order[++tot]=u,depth[tot]=dep;
+        }
+    }
+}
+
+edge eg[N];
+int main()
+{
+    memset(head,-1,sizeof(head));
+    scanf("%d%d",&n,&m);
+    for (int i = 1; i < n; i ++)
+    {
+        scanf("%d%d%d",&eg[i].u,&eg[i].v,&eg[i].w);
+        b[i] = eg[i].w;
+    }
+    sort(b+1, b+n);
+    sz = unique(b+1, b+n)-b-1;
+    T[0] = build(1, sz);//此句可要可不要
+    for (int i = 1; i < n; i ++)
+    {
+        int t = lower_bound(b+1, b+1+sz, eg[i].w)-b; //用离散化后的边权建树
+        addedge(eg[i].u,eg[i].v,t);
+        addedge(eg[i].v,eg[i].u,t);
+    }
+    dfs(1,1); //建立所有前缀的线段树
+    for(int i=1; i<=tot; i++) //ST表
+        f[0][i]=depth[i],rec[0][i]=order[i];
+    for(int i=1; i<=log(tot)/log(2); i++)
+        for(int j=1; j<=tot-(1<<i)+1; j++)
+        {
+            if(f[i-1][j]<f[i-1][j+(1<<(i-1))])
+                f[i][j]=f[i-1][j],rec[i][j]=rec[i-1][j];
+            else f[i][j]=f[i-1][j+(1<<(i-1))],rec[i][j]=rec[i-1][j+(1<<(i-1))];
+        }
+    while (m--)
+    {
+        int x, y, z;
+        scanf("%d%d%d", &x, &y, &z);
+        z = upper_bound(b+1, b+1+sz, z)-b-1;//找到最后一个等于z的位置
+        if(z==0)//找不到等于z
+        {
+            puts("0");
+            continue;
+        }
+        int fa=lca(x,y);
+        int t = query(T[x], T[y], 1, sz, z,T[fa]); //查找z位置及之前的边权出现次数
+        printf("%d\n", t);
+    }
+    return 0;
+}

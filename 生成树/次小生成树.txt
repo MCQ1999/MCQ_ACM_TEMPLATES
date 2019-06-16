@@ -1,0 +1,120 @@
+//POJ 1679
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<iostream>
+#include<string>
+#include<vector>
+#include<stack>
+#include<bitset>
+#include<cstdlib>
+#include<cmath>
+#include<set>
+#include<list>
+#include<deque>
+#include<map>
+#include<queue>
+#include<iomanip>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=105;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+ll gcd(ll a,ll b)
+{
+    return b==0?a:gcd(b,a%b);
+}
+bool vis[maxn];
+int lowc[maxn],pre[maxn],MAX[maxn][maxn],used[maxn][maxn],g[maxn][maxn],n,m;
+int prim(int cost[][maxn],int n)
+{
+    memset(vis,false,sizeof(vis));
+    memset(pre,0,sizeof(pre));
+    memset(MAX,0,sizeof(MAX));
+    memset(used,0,sizeof(used));
+    vis[0]=true;
+    pre[0]=-1;
+    int ans=0;
+    for(int i=1; i<n; i++)
+    {
+        lowc[i]=cost[0][i];
+    }
+    for(int i=1; i<n; i++)
+    {
+        int minc=inf;
+        int p=-1;
+        for(int j=0; j<n; j++)
+        {
+            if(!vis[j]&&minc>lowc[j])
+            {
+                minc=lowc[j];
+                p=j;
+            }
+        }
+        if(minc==inf)   return -1;
+        vis[p]=true;
+        ans+=minc;
+        used[p][pre[p]]=used[pre[p]][p]=1;
+        for(int j=0; j<n; j++)
+        {
+            if(vis[j])
+            {
+                MAX[j][p]=MAX[p][j]=max(MAX[j][pre[p]],lowc[p]);
+            }
+            if(!vis[j]&&lowc[j]>cost[p][j])
+                {
+                    lowc[j]=cost[p][j];
+                    pre[j]=p;
+                }
+        }
+    }
+    return ans;
+}
+int secondPrim(int sum)
+{
+    int ans=inf;///记录次小生成树的总值
+    for(int i=0;i<n;i++)///遍历所有的边
+    {
+        for(int j=i+1;j<n;j++)
+        {
+            if(!used[i][j]&&g[i][j]!=inf)///如果该边不是构成最小生成树的边而且可以走的通
+            {
+                ans=min(sum+g[i][j]-MAX[i][j],ans);///更新次小生成树，加上该边减去环中最大的边
+            }
+        }
+    }
+    if(ans==inf)    return -1;
+    return ans;
+}
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int t;
+    cin>>t;
+    while(t--)
+    {
+        cin>>n>>m;
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<n;j++)
+            {
+                if(i==j)    g[i][j]=0;
+                else
+                    g[i][j]=g[j][i]=inf;
+            }
+        }
+        for(int i=0; i<m; i++)
+        {
+            int a,b,w;
+            cin>>a>>b>>w;
+            g[a-1][b-1]=g[b-1][a-1]=w;
+        }
+        int a1=prim(g,n),a2=secondPrim(a1);
+        if(a1==a2)
+            cout<<"Not Unique!"<<endl;
+        else
+            cout<<a1<<endl;
+    }
+    return 0;
+}

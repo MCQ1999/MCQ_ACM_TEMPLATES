@@ -1,0 +1,66 @@
+/*
+题意：求一个大数k（保证是两个素数乘积）的较小素数是否小于L。
+POJ2635
+*/
+import java.math.*;
+import java.util.*;
+
+public class Main {
+	final int maxn=(int)1e6+10;
+	static int tot=0;
+	int [] prime=new int[maxn],vis=new int [maxn];
+	public void shai() {
+		tot=0;
+		Arrays.fill(vis, 0);
+		for(int i=2;i<maxn;i++)
+		{
+			if(vis[i]==0)
+			{
+				prime[tot++]=i;
+			}
+			for(int j=0;j<tot&&prime[j]*i<maxn;j++)
+			{
+				vis[prime[j]*i]=1;
+				if(i%prime[j]==0)
+				{
+					break;
+				}
+			}
+		}
+	}
+	
+	public static void main(String[] args) {
+		BigInteger k,L;
+		Main M=new Main();
+		M.shai();
+		Scanner cin=new Scanner(System.in);
+		while(cin.hasNext())
+		{
+			k=cin.nextBigInteger();
+			L=cin.nextBigInteger();
+			BigInteger zero=BigInteger.ZERO;
+			int i,flag=0;
+			if(k.compareTo(zero)==0&&L.compareTo(zero)==0)
+			{
+				break;
+			}
+		//	System.out.println(M.tot);
+			for(i=0;i<M.tot;i++)
+			{
+				if(k.mod(BigInteger.valueOf(M.prime[i])).compareTo(zero)==0)
+				{
+					if(BigInteger.valueOf(M.prime[i]).compareTo(L)<0)
+					{
+						System.out.println("BAD "+M.prime[i]);
+						flag=1;
+						break;
+					}
+				}
+			}
+			if(flag==0)
+			{
+				System.out.println("GOOD");
+			}	
+		}
+	}
+}

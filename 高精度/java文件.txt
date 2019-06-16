@@ -1,0 +1,2 @@
+PrintStream ps=new PrintStream(new FileOutputStream("output.txt"));
+System.setOut(ps);  //ÎÄ¼şÊä³ö

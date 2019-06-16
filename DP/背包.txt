@@ -1,0 +1,42 @@
+//v[]是价值,w[]是重量,m是容量
+//01背包+滚动数组O(n^2)
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int maxn=1e3+10;
+int w[maxn],v[maxn],dp[maxn];
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    int m,n;
+    while(cin>>m>>n)
+    {
+        memset(dp,0,sizeof(dp));
+        for(int i=1; i<=n; i++)
+        {
+            cin>>w[i];
+        }
+        for(int i=1; i<=n; i++)
+        {
+            cin>>v[i];
+        }
+        for(int i=1; i<=n; i++)
+        {
+            for(int j=m; j>=w[i]; j--)
+            {
+                dp[j]=max(dp[j],dp[j-w[i]]+v[i]);
+            }
+        }
+        cout<<dp[m]<<endl;
+    }
+    return 0;
+}
+//完全背包+滚动数组O(n^2)
+/*for(int i=1; i<=n; i++)
+{
+    for(int j=w[i]; j<=m; j++)
+    {
+        dp[j]=max(dp[j],dp[j-w[i]]+v[i]);
+    }
+}*/

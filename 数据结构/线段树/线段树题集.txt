@@ -1,0 +1,92 @@
+1.线段树求区间长度并(牛客370A)
+思路:用mi[rt]存储这个结点所代表的区间是否被覆盖完全。查询时如果mi[rt]存在就返回这个区间长度，如果l==r就返回mi[rt](这个点是否被覆盖)。
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn = 1e5+10;
+int N,maxL;
+int Add[maxn<<2],mi[maxn<<2];//Sum求和，Add为懒惰标记
+int A[maxn],n;//存原数组数据下标[1,n]
+//PushUp函数更新节点信息 ，这里是求和
+void PushUp(int rt)
+{
+    mi[rt]=min(mi[rt<<1],mi[rt<<1|1]);
+}
+//下推标记
+void PushDown(int rt,int ln,int rn)
+{
+    //ln,rn为左子树，右子树的数字数量。
+    if(Add[rt])
+    {
+        //下推标记
+        Add[rt<<1]+=Add[rt];
+        Add[rt<<1|1]+=Add[rt];
+        //修改子节点的Sum使之与对应的Add相对应
+        mi[rt<<1]+=Add[rt]*ln;
+        mi[rt<<1|1]+=Add[rt]*rn;
+        //清除本节点标记
+        Add[rt]=0;
+    }
+}
+//区间修改 假设A[L,R]+=C
+void Update(int L,int R,int C,int l,int r,int rt) //L,R表示操作区间，l,r表示当前节点区间，rt表示当前节点编号
+{
+    if(L <= l && r <= R) //如果本区间完全在操作区间[L,R]以内
+    {
+        mi[rt]+=C;
+        Add[rt]+=C;
+        return ;
+    }
+    int m=(l+r)>>1;
+    PushDown(rt,m-l+1,r-m);//下推标记
+    //这里判断左右子树跟[L,R]有无交集，有交集才递归
+    if(L <= m) Update(L,R,C,l,m,rt<<1);
+    if(R >  m) Update(L,R,C,m+1,r,rt<<1|1);
+    PushUp(rt);//更新本节点信息
+}
+//区间查询
+int Query(int l,int r,int rt) //L,R表示操作区间，l,r表示当前节点区间，rt表示当前节点编号
+{
+    if(mi[rt])
+    {
+        //在区间内，直接返回
+        return r-l+1;
+    }
+    if(l==r) return mi[rt];
+    int m=(l+r)>>1;
+    //下推标记，否则Sum可能不正确
+    PushDown(rt,m-l+1,r-m);
+    //累计答案
+    int ANS=0;
+    ANS+=Query(l,m,rt<<1);
+    ANS+=Query(m+1,r,rt<<1|1);
+    return ANS;
+}
+map<pair<int,int>,bool> m;
+int main()
+{
+    scanf("%d%d",&N,&maxL);
+    memset(mi,0,sizeof(mi));
+    m.clear();
+    while(N--)
+    {
+        int opt,x,y;
+        scanf("%d%d%d",&opt,&x,&y);
+        if(opt == 1)
+        {
+            if(m[make_pair(x,y)]) continue;
+            m[make_pair(x,y)]=1;
+            Update(x,y,1,1,maxL,1);
+        }
+        if(opt == 2)
+        {
+            if(!m[make_pair(x,y)]) continue;
+            m[make_pair(x,y)]=0;
+            Update(x,y,-1,1,maxL,1);
+        }
+        if(opt == 3)
+        {
+            printf("%d\n",Query(1,maxL,1));
+        }
+    }
+    return 0;
+}

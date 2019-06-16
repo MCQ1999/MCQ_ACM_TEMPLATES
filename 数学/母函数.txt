@@ -1,0 +1,60 @@
+//找凑不出来的第一个钱。
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=1e5;
+int a[maxn],b[maxn],n[maxn],v[3]={1,2,5};//a储存多项式系数,b是中间变量
+int main()
+{
+    while(cin>>n[0]>>n[1]>>n[2]&&n[0]+n[1]+n[2])
+    {
+        memset(a,0,sizeof(a));
+        int mx=n[0]*1+n[1]*2+n[2]*5;
+        for(int i=0;i<=n[0];i++) a[i]=1; //初始化第一个多项式1+x+x^2+…+x^n
+        for (int i=1; i<=2; i++) //1~i多项式相乘
+        {
+            memset(b,0,sizeof(b));
+            for(int j=0;j<=mx;j++) //对于之前的项
+            {
+                if(a[j])
+                for(int k=0;k+j<=mx&&k<=v[i]*n[i];k+=v[i]) //1+x^2i+x^3i+…x^n
+                {
+                    b[j+k]+=a[j];
+                }
+            }
+            memcpy(a,b,sizeof(b));//b赋值给a
+        }
+        int i;
+        for(i=0;i<=mx;++i)
+        {
+            if(!a[i]) break;
+        }
+        cout<<i<<endl;
+    }
+}
+
+//hdu1028 求n被划分成整数之和的方案数
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=1e5;
+int a[maxn],b[maxn],n;//a储存多项式系数,b是中间变量
+int main()
+{
+    while(cin>>n)
+    {
+        for(int i=0;i<=n;i++) a[i]=1; //初始化第一个多项式1+x+x^2+…+x^n
+        for (int i=2; i<=n; i++) //1~i多项式相乘
+        {
+            memset(b,0,sizeof(b));
+            for(int j=0;j<=n;j++) //对于之前的项
+            {
+                for(int k=0;k+j<=n;k+=i) //1+x^2i+x^3i+…x^n
+                {
+                    b[j+k]+=a[j];
+                }
+            }
+            memcpy(a,b,sizeof(b));//b赋值给a
+        }
+        cout<<a[n]<<endl;
+    }
+}
+

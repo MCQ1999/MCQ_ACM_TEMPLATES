@@ -1,0 +1,26 @@
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int N=sqrt(1e10);
+int vis[N],prime[N],tot;
+void shai()
+{
+    tot=0;
+    memset(vis,0,sizeof(vis));
+    for(int i=2;i<N;i++)
+    {
+        if(!vis[i])
+            prime[tot++]=i;
+        for(int j=0;j<tot&&prime[j]*i<N;j++)
+        {
+            vis[prime[j]*i]=1;
+            if(i%prime[j]==0)
+                break;
+        }
+    }
+}
+int main()
+{
+    shai();
+    return 0;
+}
