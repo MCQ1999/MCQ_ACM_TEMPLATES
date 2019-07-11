@@ -1,0 +1,60 @@
+#include<bits/stdc++.h>
+using namespace std;
+const int N=1e5+5;
+#define ll long long
+#define int ll
+#define lowbit(x) (x&(-x))
+int c[N];
+struct node
+{
+    int v,id;
+    bool operator < (node b)
+    {
+        return (v<b.v)||(v==b.v&&id<b.id); //从小到大排序
+    }
+} node[N];
+int n;
+void add(int i)
+{
+    while(i<=n)
+    {
+        c[i]++;
+        i+=lowbit(i);
+    }
+}
+long long sum(int i)
+{
+    long long res=0;
+    while(i>0)
+    {
+        res+=c[i];
+        i-=lowbit(i);
+    }
+    return res;
+}
+
+signed main()
+{
+    ll x,y;
+    while(~scanf("%lld",&n))
+    {
+        memset(c,0,sizeof(c));
+        int a;
+        for(int i=1; i<=n; i++)
+        {
+            scanf("%lld",&a);
+            node[i].id=i;
+            node[i].v=a;
+        }
+        sort(node+1,node+1+n);
+        ll ans=0;
+        for(int i=1; i<=n; i++)
+        {
+            add(node[i].id);  //离散化结果—— 下标等效于数值
+            ans+=i-sum(node[i].id); //得到之前有多少个比你大的数（逆序对）
+        }
+       printf("%lld\n",ans);
+    }
+
+    return 0;
+}
