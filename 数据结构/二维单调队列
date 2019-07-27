@@ -1,0 +1,120 @@
+//1.n*n矩阵找最大子矩阵使得mx-mi<=k
+//https://ac.nowcoder.com/acm/contest/883/F
+#include<bits/stdc++.h>
+#define ll long long
+#define inf 0x3f3f3f3f
+const int N=505;
+using namespace std;
+int a[N][N],mx[N],mi[N],q[N][2],n,k;//q[][0]最大,q[][1]最小
+int main()
+{
+    int t;
+    scanf("%d",&t);
+    while(t--)
+    {
+        scanf("%d%d",&n,&k);
+        for(int i=1; i<=n; i++)
+        {
+            for(int j=1; j<=n; j++)
+            {
+                scanf("%d",&a[i][j]);
+            }
+        }
+        int ans=1;
+        for(int i=1; i<=n; i++)
+        {
+            for(int p = 1; p <= n; p++)
+            {
+                mx[p]=-inf;
+                mi[p]=inf;
+            }
+            for(int j = i; j <= n; j++)
+            {
+                for(int p = 1; p <= n; p++)
+                {
+                    mx[p]=max(mx[p],a[j][p]);
+                    mi[p]=min(mi[p],a[j][p]);
+                }
+                int l=1,h0=1,t0=0,h1=1,t1=0;
+                for(int r = 1; r <= n; r++)
+                {
+                    while(h0<=t0&&mx[r]>=mx[q[t0][0]])  //单调递减
+                    {
+                        t0--;
+                    }
+                    while(h1<=t1&&mi[r]<=mi[q[t1][1]])  //单调递增
+                    {
+                        t1--;
+                    }
+                    q[++t0][0] = r;
+                    q[++t1][1] = r;
+                    while(l<=r&&mx[q[h0][0]]-mi[q[h1][1]]>k)
+                    {
+                        l++;
+                        if(q[h0][0]<l) h0++;
+                        if(q[h1][1]<l) h1++;
+                    }
+                    ans=max(ans,(r-l+1)*(j-i+1));
+                }
+            }
+        }
+        cout<<ans<<endl;
+    }
+    return 0;
+}
+
+//2.n*m矩阵找k*k子矩阵使得mx-mi最小
+//https://www.luogu.org/problem/P2216
+#include <bits/stdc++.h>
+using namespace std;
+const int N=1e3+5;
+int n,m,k,h0,h1,t0,t1,ans;
+int a[N][N],q[N],Q[N];
+int x[N][N],X[N][N];
+int y[N][N],Y[N][N];
+
+int main()
+{
+    scanf("%d%d%d",&n,&m,&k);
+    for (int i=1; i<=n; i++)
+        for (int j=1; j<=m; j++)
+            scanf("%d",&a[i][j]);
+    for (int i=1; i<=n; i++)
+    {
+        h1=t1=h0=t0=Q[1]=q[1]=1;
+        for (int j=2; j<=m; j++)
+        {
+            while (a[i][j]>=a[i][Q[t1]]&&h1<=t1) t1--;
+            while (a[i][j]<=a[i][q[t0]]&&h0<=t0) t0--;
+            t1++;
+            t0++;
+            Q[t1]=j;
+            q[t0]=j;
+            while (j-Q[h1]>=k) h1++;
+            while (j-q[h0]>=k) h0++;
+            if (j>=k) X[i][j-k+1]=a[i][Q[h1]],x[i][j-k+1]=a[i][q[h0]];
+        }
+    }
+    for (int i=1; i<=m-k+1; i++)
+    {
+        h1=t1=h0=t0=Q[1]=q[1]=1;
+        for (int j=2; j<=n; j++)
+        {
+            while (X[j][i]>=X[Q[t1]][i]&&h1<=t1) t1--;
+            while (x[j][i]<=x[q[t0]][i]&&h0<=t0) t0--;
+            t1++;
+            t0++;
+            Q[t1]=j;
+            q[t0]=j;
+            while (j-Q[h1]>=k) h1++;
+            while (j-q[h0]>=k) h0++;
+            if (j>=k) Y[j-k+1][i]=X[Q[h1]][i],y[j-k+1][i]=x[q[h0]][i];
+        }
+    }
+    ans=0x3f3f3f3f;
+    for (int i=1; i<=n-k+1; i++)
+        for (int j=1; j<=m-k+1; j++)
+            ans=min(ans,Y[i][j]-y[i][j]);
+    printf("%d\n",ans);
+    return 0;
+}
