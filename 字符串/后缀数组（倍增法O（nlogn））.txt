@@ -1,4 +1,6 @@
-//���p3309
+//洛谷p3809
+/*读入一个长度为n的由大小写英文字母或数字组成的字符串，请把这个字符串的所有非空后缀按字典序从小到大排序，然后按顺序输出后缀的第一个字符在原串中的位置。位置编号为1到n。
+*/
 #include<cstdio>
 #include<cstring>
 #include<algorithm>
@@ -7,16 +9,16 @@ using namespace std;
 char s[N];
 int len, M, rk[N], sa[N], tax[N], tp[N];
 /*
-sa[i]������Ϊi�ĺ�׺��λ��
-rk[i]���ӵ�i��λ�ÿ�ʼ�ĺ�׺���������Ѵӵ�i��λ�ÿ�ʼ�ĺ�׺���Ϊ��׺i
-tp[i]����������ĵڶ��ؼ��֣�������saһ�������ڶ��ؼ�������Ϊi�ĺ�׺��λ��
-tax[i]��i��Ԫ�س����˶��ٴΡ�������������
-s���ַ�����s[i]��ʾ�ַ����е�i���ַ���
+sa[i]：排名为i的后缀的位置
+rk[i]：从第i个位置开始的后缀的排名，把从第i个位置开始的后缀简称为后缀i
+tp[i]：基数排序的第二关键字，意义与sa一样，即第二关键字排名为i的后缀的位置
+tax[i]：i号元素出现了多少次。辅助基数排序
+s：字符串，s[i]表示字符串中第i个字符串
 */
-void debug() //����
+void debug() //调试
 {
     printf("*****************\n");
-    printf("�±�");
+    printf("下标");
     for (int i = 1; i <= len; i++) printf("%d ", i);
     printf("\n");
     printf("sa  ");
@@ -29,42 +31,42 @@ void debug() //����
     for (int i = 1; i <= len; i++) printf("%d ", tp[i]);
     printf("\n");
 }
-void jsort() //��������
+void jsort() //基数排序
 {
     for (int i = 0; i <= M; i++) tax[i] = 0;
     for (int i = 1; i <= len; i++) tax[rk[i]]++;
     for (int i = 1; i <= M; i++) tax[i] += tax[i - 1];
     for (int i = len; i >= 1; i--) sa[ tax[rk[tp[i]]]-- ] = tp[i];
 }
-void suffixSort() //��׺����
+void suffixSort() //后缀排序
 {
-    M = 75; //�ַ����Ĵ�С
+    M = 75; //字符集的大小
     for (int i = 1; i <= len; i++) rk[i] = s[i] - '0' + 1, tp[i] = i;
     jsort();
    // Debug();
     for (int w = 1, p = 0; p < len; M = p, w <<= 1)
     {
-        //w:��ǰ�����ĳ��ȣ�w = x��ʾ�Ѿ�����˳���Ϊx�ĺ�׺������������Ҫ���³���Ϊ2x�ĺ�׺������
-        //p��ʾ��ͬ�ĺ�׺�ĸ���������Ȼԭ�ַ����ĺ�׺���ǲ�ͬ�ģ����p = Nʱ�����˳�ѭ��
-        p = 0;//�����p������һ��������000
+        //w:当前倍增的长度，w = x表示已经求出了长度为x的后缀的排名，现在要更新长度为2x的后缀的排名
+        //p表示不同的后缀的个数，很显然原字符串的后缀都是不同的，因此p = N时可以退出循环
+        p = 0;//这里的p仅仅是一个计数器000
         for (int i = 1; i <= w; i++) tp[++p] = len - w + i;
-        for (int i = 1; i <= len; i++) if (sa[i] > w) tp[++p] = sa[i] - w; //�������Ǻ�׺����ĺ��Ĳ��֣����Ѿ���ͼ˵��
-        jsort();//��ʱ�����Ѿ����³��˵ڶ��ؼ��֣�������һ�ֵ�rak���±��ֵ�sa
-        swap(tp, rk);//����ԭ��tp�Ѿ�û������
+        for (int i = 1; i <= len; i++) if (sa[i] > w) tp[++p] = sa[i] - w; //这两句是后缀数组的核心部分，我已经画图说明
+        jsort();//此时我们已经更新出了第二关键字，利用上一轮的rak更新本轮的sa
+        swap(tp, rk);//这里原本tp已经没有用了
         rk[sa[1]] = p = 1;
         for (int i = 2; i <= len; i++)
             rk[sa[i]] = (tp[sa[i - 1]] == tp[sa[i]] && tp[sa[i - 1] + w] == tp[sa[i] + w]) ? p : ++p;
-        //���ﵱ������׺��һ��������ͬʱ����Ҳ��ͬ
+        //这里当两个后缀上一轮排名相同时本轮也相同
         //Debug();
     }
   //  for (int i = 1; i <= len; i++)
   //      printf("%d ", sa[i]);
 }
-//i�ź�׺����i��ʼ�ĺ�׺
-//lcp(x,y):�ַ���x���ַ���y�������ǰ׺��������ָx�ź�׺����y�ź�׺�������ǰ׺
-int height[N];//lcp(sa[i],sa[i?1])��������Ϊi�ĺ�׺������Ϊi?1�ĺ�׺�������ǰ׺
-int h[N];//height[rak[i]]����i�ź�׺����ǰһ���ĺ�׺�������ǰ׺
-//���ʣ�H[i]?H[i?1]?1
+//i号后缀：从i开始的后缀
+//lcp(x,y):字符串x与字符串y的最长公共前缀，在这里指x号后缀与与y号后缀的最长公共前缀
+int height[N];//lcp(sa[i],sa[i-1])，即排名为i的后缀与排名为i-1的后缀的最长公共前缀
+int h[N];//height[rak[i]]，即i号后缀与它前一名的后缀的最长公共前缀
+//性质：H[i]>=H[i-1]-1
 void getHeight()
 {
     int j, k = 0;
@@ -78,9 +80,9 @@ void getHeight()
     }
 }
 /*
-������׺����󹫹�ǰ׺lcp(x,y)=min(heigh[x?y])�� ��rmqά����O(1)��ѯ
-���ص���ظ��Ӵ�:height����������ֵ
-���ʲ�ͬ���Ӵ�������:ö��ÿһ����׺����i����׺�Դ𰸵Ĺ���Ϊlen?sa[i]+1?height[i]
+两个后缀的最大公共前缀lcp(x,y)=min(heigh[x-y])， 用rmq维护，O(1)查询
+可重叠最长重复子串:height数组里的最大值
+本质不同的子串的数量:枚举每一个后缀，第i个后缀对答案的贡献为len-sa[i]+1-height[i]
 */
 int main()
 {
