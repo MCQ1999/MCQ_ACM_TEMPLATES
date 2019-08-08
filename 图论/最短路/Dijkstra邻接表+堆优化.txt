@@ -1,18 +1,7 @@
-//<ÁÚ½Ó±í+¶ÑÓÅ»¯+·ÀÖØ±ß O((E+V)logV)>  POJ2387Ä£°åÌâ
-#include <cstdio>
-#include <iostream>
-#include <cstring>
-#include <cctype>
-#include <cstdlib>
-#include <algorithm>
-#include <vector>
-#include <queue>
-#include <stack>
-#include <set>
-#include <map>
-#include <list>
+//<é‚»æ¥è¡¨+å †ä¼˜åŒ–+é˜²é‡è¾¹ O((E+V)logV)>  POJ2387æ¨¡æ¿é¢˜
+#include<bits/stdc++.h>
 using namespace std;
-const int maxn=500010;
+const int N=500010;
 const int INF=0x3f3f3f3f;
 struct node
 {
@@ -22,14 +11,14 @@ struct node
         p=a;
         w=b;
     }
-    friend bool operator<(node a,node b) //È¨ÖµĞ¡µÄÏÈ³ö¶Ó
+    friend bool operator<(node a,node b) //æƒå€¼å°çš„å…ˆå‡ºé˜Ÿ
     {
         if(a.w!=b.w) return a.w>b.w;
         return a.p>b.p;
     }
 };
-vector <node> eg[maxn];
-int dis[maxn],n;
+vector <node> eg[N];
+int dis[N],n;
 void add(int u,int v,int w)
 {
     eg[u].push_back(node(v,w));
