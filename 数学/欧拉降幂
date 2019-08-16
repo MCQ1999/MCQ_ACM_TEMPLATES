@@ -1,52 +1,76 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-int a,b,m,temp,phi,ans=1;
-bool flag;
+typedef long long ll;
+char b[1000006];
 
-int main()
+ll phi(ll n)
 {
-    int i;
-    char c;
-    scanf("%d%d",&a,&m);//a^b%m
-    temp=phi=m;
-    for (i=2; i*i<=m; ++i) //计算phi
+    ll ans=n,a=n;
+    for(ll i=2; i*i<=a; i++)
     {
-        if (temp%i==0)
+        if(a%i==0)
         {
-            phi=phi-phi/i;
-            while (temp%i==0)
+            ans-=ans/i;
+            while(a%i==0)
             {
-                temp/=i;
+                a/=i;
             }
         }
     }
-    if (temp>1)
+    if(a>1)
     {
-        phi=phi-phi/temp;
+        ans-=ans/a;
     }
-    while (!isdigit(c=getchar())); //边读入b边取模
-    for (; isdigit(c); c=getchar())
+    return ans;
+}
+
+ll qmod(ll a,ll n,ll mod)
+{
+    ll tmp=a%mod,ans=1;
+    while(n)
     {
-        b=b*10+c-'0';
-        if (b>=phi)
+        if(n&1)
         {
-            flag=true;
-            b%=phi;
+            ans=(ans*tmp)%mod;
         }
+        tmp=tmp*tmp%mod;
+        n>>=1;
     }
-    if (flag) //只有b>=phi时才b+=phi
+    return ans;
+}
+//利用公式
+ll solve(ll a,char *b,ll c)
+{
+    int PHI=phi(c);
+    ll res=0;
+    for(int i=0; b[i]; i++)
     {
-        b+=phi;
+        res=(res*10+b[i]-'0');
+        if(res>c)break;
     }
-    for (i=20; i>=0; --i) //快速幂，不是必需的
+    if(res<=PHI)
     {
-        ans=1ll*ans*ans%m;
-        if (b&(1<<i))
+        return qmod(a,res,c);
+    }
+    else
+    {
+        res=0;
+        for(int i=0; b[i]; i++)
         {
-            ans=1ll*ans*a%m;
+            res=(res*10+b[i]-'0')%PHI;
         }
+        return qmod(a,res+PHI,c);
     }
-    cout<<ans<<endl;
+}
+
+int main()
+{
+    ll a,c,i;
+    ll n=0,tmp;
+    while(scanf("%lld%s%lld",&a,b,&c)!=EOF)
+    {
+        printf("%lld\n",solve(a,b,c));
+    }
     return 0;
 }
