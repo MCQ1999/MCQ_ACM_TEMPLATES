@@ -1,0 +1,119 @@
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=1e5+5;
+char s[maxn];
+int n;
+int ans;
+struct Suffix_Automation
+{
+    int next[maxn*2][26],fa[maxn*2],l[maxn*2],mmin[maxn*2],mmax[maxn*2];
+    int last,cnt;
+    int cntA[maxn*2],A[maxn*2];
+    void init()
+    {
+        last=cnt=1;
+        fa[1]=l[1]=0;
+        memset(next[1],0,sizeof next[1]);
+        ans=0;
+    }
+    int inline newnode()
+    {
+        cnt++;
+        memset(next[cnt],0,sizeof next[cnt]);
+        fa[cnt]=l[cnt]=0;
+        return cnt;
+    }
+    void add(int c)
+    {
+        int p=last;
+        int np=newnode();
+        l[np]=mmin[np]=l[p]+1;
+        last=np;
+        while(p&&!next[p][c])
+            next[p][c]=np,p=fa[p];
+        if(!p)
+            fa[np]=1;
+        else
+        {
+            int q=next[p][c];
+            if(l[q]==l[p]+1)
+                fa[np]=q;
+            else
+            {
+                int nq=++cnt;
+                l[nq]=mmin[nq]=l[p]+1;
+                memcpy(next[nq],next[q],sizeof next[q]);
+                fa[nq]=fa[q];
+                fa[np]=fa[q]=nq;
+                while(next[p][c]==q)
+                    next[p][c]=nq,p=fa[p];
+            }
+        }
+    }
+    void work()
+    {
+        memset(cntA,0,sizeof cntA);
+        for(int i=1;i<=cnt;i++)
+            cntA[l[i]]++;
+        for(int i=1;i<=n;i++)
+            cntA[i]+=cntA[i-1];
+        for(int i=cnt;i>=1;i--)
+            A[cntA[l[i]]--]=i;
+    }
+    void solve()
+    {
+        while(scanf("%s",s+1)!=EOF)
+        {
+            int p=1;
+            int len=0;
+            for(int i=1;s[i];i++)
+            {
+                int x=s[i]-'a';
+                if(next[p][x])
+                {
+                    p=next[p][x];
+                    mmax[p]=max(mmax[p],++len);
+                }
+                else
+                {
+                    while(p&&!next[p][x]) p=fa[p];
+                    if(!p)
+                    {
+                        p=1,len=0;
+                    }
+                    else
+                    {
+                        len=l[p]+1,p=next[p][x];
+                        mmax[p]=max(mmax[p],len);
+                    }
+                }
+            }
+            for(int i=cnt;i>=1;i--)
+            {
+                p=A[i];
+                mmin[p]=min(mmin[p],mmax[p]);
+                if(fa[p])
+                {
+                    mmax[fa[p]]=max(mmax[fa[p]],mmax[p]);
+                }
+                mmax[p]=0;
+            }
+        }
+        for(int i=1;i<=cnt;i++)
+        {
+            ans=max(ans,mmin[i]);
+        }
+    }
+}sam;
+int main()
+{
+    scanf("%s",s+1);
+    n=strlen(s+1);
+    sam.init();
+    for(int i=1;i<=n;i++)
+        sam.add(s[i]-'a');
+    sam.work();
+    sam.solve();
+    printf("%d\n",ans);
+    return 0;
+}
