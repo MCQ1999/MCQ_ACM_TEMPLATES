@@ -1,0 +1,112 @@
+//BZOJ1798
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int N=1e5+5;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+#define int long long
+int sum[N<<2],add[N<<2],mul[N<<2];
+int a[N],n,m,p;
+void pushUp(int rt)
+{
+    sum[rt]=(sum[rt<<1]+sum[rt<<1|1])%p;
+}
+void build(int l,int r,int rt)
+{
+    if(l==r)
+    {
+        sum[rt]=a[l];
+        return;
+    }
+    int m=(l+r)>>1;
+    build(l,m,rt<<1);
+    build(m+1,r,rt<<1|1);
+    pushUp(rt);
+}
+void pushDown(int rt,int ln,int rn)
+{
+    if(add[rt]||mul[rt]!=1)
+    {
+        mul[rt<<1]=(mul[rt<<1]*mul[rt])%p;
+        mul[rt<<1|1]=(mul[rt<<1|1]*mul[rt])%p;
+        add[rt<<1]=(add[rt]+add[rt<<1]*mul[rt]%p)%p;
+        add[rt<<1|1]=(add[rt]+add[rt<<1|1]*mul[rt]%p)%p;
+        sum[rt<<1]=(sum[rt<<1]*mul[rt]%p+add[rt]*ln%p)%p;
+        sum[rt<<1|1]=(sum[rt<<1|1]*mul[rt]%p+add[rt]*rn%p)%p;
+        add[rt]=0;
+        mul[rt]=1;
+    }
+}
+void update(int L,int R,int C,int l,int r,int rt,int o)
+{
+    if(L <= l && r <= R)
+    {
+        if(o==1)
+        {
+            sum[rt]=(sum[rt]*C)%p;
+            mul[rt]=(mul[rt]*C)%p;
+            add[rt]=(add[rt]*C)%p;
+        }
+        else
+        {
+            sum[rt]=(sum[rt]%p+C%p*(r-l+1)%p)%p;
+            add[rt]=(add[rt]+C)%p;
+        }
+        return ;
+    }
+    int m=(l+r)>>1;
+    pushDown(rt,m-l+1,r-m);
+    if(L <= m) update(L,R,C,l,m,rt<<1,o);
+    if(R >  m) update(L,R,C,m+1,r,rt<<1|1,o);
+    pushUp(rt);
+}
+int query(int L,int R,int l,int r,int rt)
+{
+    if(L <= l && r <= R)
+    {
+        return sum[rt];
+    }
+    int m=(l+r)>>1;
+    pushDown(rt,m-l+1,r-m);
+    int ans=0;
+    if(L <= m) ans+=query(L,R,l,m,rt<<1),ans%=p;
+    if(R >  m) ans+=query(L,R,m+1,r,rt<<1|1),ans%=p;
+    ans%=p;
+    return ans;
+}
+signed main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(0);
+    std::cout.tie(0);
+    while(cin>>n>>p)
+    {
+        memset(add,0,sizeof(add));
+        fill(mul,mul+(N<<2),1);
+        for(int i=1; i<=n; i++)
+        {
+            cin>>a[i];
+        }
+        build(1,n,1);
+        cin>>m;
+        while(m--)
+        {
+            ll o,l,r,c;
+            cin>>o>>l>>r;
+            if(o==3)
+            {
+                cout<<query(l,r,1,n,1)<<endl;
+            }
+            else
+            {
+                cin>>c;
+                update(l,r,c,1,n,1,o);
+            }
+        }
+    }
+    return 0;
+}
+ 
