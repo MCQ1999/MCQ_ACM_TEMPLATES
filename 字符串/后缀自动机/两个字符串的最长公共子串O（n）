@@ -1,0 +1,85 @@
+//SPOJ - LCS
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=3e5+5;
+char s[maxn];
+int n;
+struct Suffix_Automation
+{
+    int next[maxn*2][26],fa[maxn*2],l[maxn*2],num[maxn*2];;
+    int last,cnt;
+    long long ans=0;
+    void init()
+    {
+        last=cnt=1;
+        fa[1]=l[1]=0;
+        memset(next[1],0,sizeof next[1]);
+        ans=0;
+    }
+    int inline newnode()
+    {
+        cnt++;
+        memset(next[cnt],0,sizeof next[cnt]);
+        fa[cnt]=l[cnt]=num[cnt]=0;
+        return cnt;
+    }
+    void add(int c)
+    {
+        int p=last;
+        int np=newnode();
+        l[np]=l[p]+1;
+        last=np;
+        while(p&&!next[p][c])
+            next[p][c]=np,p=fa[p];
+        if(!p)
+            fa[np]=1;
+        else
+        {
+            int q=next[p][c];
+            if(l[q]==l[p]+1)
+                fa[np]=q;
+            else
+            {
+                int nq=++cnt;
+                l[nq]=l[p]+1;
+                memcpy(next[nq],next[q],sizeof next[q]);
+                fa[nq]=fa[q];
+                fa[np]=fa[q]=nq;
+                num[nq]=num[q];
+                while(next[p][c]==q)
+                    next[p][c]=nq,p=fa[p];
+            }
+        }
+    }
+} sam;
+int main()
+{
+    scanf("%s",s+1);
+    sam.init();
+    n=strlen(s+1);
+    for(int i=1; i<=n; i++)
+        sam.add(s[i]-'a');
+    scanf("%s",s+1);
+    n=strlen(s+1);
+    int now=1,last=1;
+    int ans=0,len=0;
+    for(int i=1; i<=n; i++)
+    {
+        int x=s[i]-'a';
+        if(sam.next[now][x])
+        {
+            len++;
+            now=sam.next[now][x];
+        }
+        else
+        {
+            while(now&&!sam.next[now][x]) now=sam.fa[now];
+            if(!now)
+                now=1,len=0;
+            else len=sam.l[now]+1,now=sam.next[now][x];
+        }
+        ans=max(ans,len);
+    }
+    printf("%d\n",ans);
+    return 0;
+}
