@@ -1,0 +1,69 @@
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=5e4+5;
+char s[maxn];
+int n;
+int ans=0;
+struct Suffix_Automation
+{
+    int next[maxn*2][26],fa[maxn*2],l[maxn*2];
+    int last,cnt;
+    void init()
+    {
+        last=cnt=1;
+        fa[1]=l[1]=0;
+        memset(next[1],0,sizeof next[1]);
+    }
+    int inline newnode()
+    {
+        cnt++;
+        memset(next[cnt],0,sizeof next[cnt]);
+        fa[cnt]=l[cnt]=0;
+        return cnt;
+    }
+    void add(int c)
+    {
+        int p=last;
+        int np=newnode();
+        l[np]=l[p]+1;
+        last=np;
+        while(p&&!next[p][c])
+        {
+            next[p][c]=np,p=fa[p];
+        }
+        if(!p)
+            fa[np]=1;
+        else
+        {
+            int q=next[p][c];
+            if(l[q]==l[p]+1)
+                fa[np]=q;
+            else
+            {
+                int nq=++cnt;
+                l[nq]=l[p]+1;
+                memcpy(next[nq],next[q],sizeof next[q]);
+                fa[nq]=fa[q];
+                fa[np]=fa[q]=nq;
+                while(next[p][c]==q)
+                    next[p][c]=nq,p=fa[p];
+            }
+        }
+    }
+    int count()
+    {
+        for(int i=1;i<=cnt;i++)
+            ans+=(l[i]-l[fa[i]]);
+        return ans;
+    }
+}sam;
+int main()
+{
+    scanf("%s",s+1);
+    n=strlen(s+1);
+    sam.init();
+    for(int i=1;i<=n;i++)
+        sam.add(s[i]-'a');
+    printf("%d\n",sam.count());
+    return 0;
+}
