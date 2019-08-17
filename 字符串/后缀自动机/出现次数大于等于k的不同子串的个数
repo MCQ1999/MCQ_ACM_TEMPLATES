@@ -1,0 +1,86 @@
+//求给定字符串出现次数大于等于k的不同子串的个数且要求支持拓展字符串
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=5e4+5;
+char s[2*maxn];
+int n,m,k;
+struct Suffix_Automation
+{
+    int next[maxn*2][26],fa[maxn*2],l[maxn*2];
+    int ans;
+    int last,cnt;
+    int cntA[maxn*2],A[maxn*2];
+    int num[maxn*2];
+    void init()
+    {
+        last=cnt=1;
+        fa[1]=l[1]=0;
+        memset(next[1],0,sizeof next[1]);
+        ans=0;
+    }
+    void add(int c)
+    {
+        int p=last;
+        int np=++cnt;
+        memset(next[cnt],0,sizeof next[cnt]);
+        l[np]=l[p]+1;
+        last=np;
+        while(p&&!next[p][c])
+            next[p][c]=np,p=fa[p];
+        if(!p)
+            fa[np]=1;
+        else
+        {
+            int q=next[p][c];
+            if(l[q]==l[p]+1)
+                fa[np]=q;
+            else
+            {
+                int nq=++cnt;
+                memcpy(next[nq],next[q],sizeof next[q]);
+                l[nq]=l[p]+1;
+                num[nq] = num[q];
+                fa[nq]=fa[q];
+                fa[np]=fa[q]=nq;
+                while(next[p][c]==q)
+                    next[p][c]=nq,p=fa[p];
+            }
+        }
+        int t=last;
+		while(t)
+        {
+			if(num[t]>=k)
+				break;
+			num[t]++;
+			if(num[t]==k)
+				ans+=l[t]-l[fa[t]];
+			t=fa[t];
+		}
+    }
+}sam;
+int main()
+{
+    char c[3];
+    while(scanf("%d%d%d",&n,&m,&k)!=EOF)
+    {
+		scanf("%s",s);
+		n=strlen(s);
+		sam.init();
+		for(int i=0;i<n;i++)
+		{
+			sam.add(s[i]-'a');
+		}
+		while(m--)
+		{
+			int flag;
+			scanf("%d",&flag);
+			if(flag==1)
+			{
+				scanf("%s",c);
+				sam.add(c[0]-'a');
+			}
+            else printf("%d\n",sam.ans);
+		}
+	}
+    return 0;
+}
