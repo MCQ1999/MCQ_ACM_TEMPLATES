@@ -1,0 +1,80 @@
+//求出一个长度最短的字符串，使得它不是给定字符串的子串。
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=1e5+5;
+char s[maxn];
+int n;
+int ans;
+struct Suffix_Automation
+{
+    int next[maxn*2][26],fa[maxn*2],l[maxn*2];
+    int last,cnt;
+    int cntA[maxn*2],A[maxn*2];
+    void init()
+    {
+        last=cnt=1;
+        fa[1]=l[1]=0;
+        memset(next[1],0,sizeof next[1]);
+        ans=0x3f3f3f3f;
+    }
+    int inline newnode()
+    {
+        cnt++;
+        memset(next[cnt],0,sizeof next[cnt]);
+        fa[cnt]=l[cnt]=0;
+        return cnt;
+    }
+    void add(int c)
+    {
+        int p=last;
+        int np=newnode();
+        l[np]=l[p]+1;
+        last=np;
+        while(p&&!next[p][c])
+            next[p][c]=np,p=fa[p];
+        if(!p)
+            fa[np]=1;
+        else
+        {
+            int q=next[p][c];
+            if(l[q]==l[p]+1)
+                fa[np]=q;
+            else
+            {
+                int nq=++cnt;
+                l[nq]=l[p]+1;
+                memcpy(next[nq],next[q],sizeof next[q]);
+                fa[nq]=fa[q];
+                fa[np]=fa[q]=nq;
+                while(next[p][c]==q)
+                    next[p][c]=nq,p=fa[p];
+            }
+        }
+    }
+    void dfs(int x,int deep)
+    {
+        if(ans<=deep)
+            return ;
+        for(int i=0;i<26;i++)
+        {
+            if(!next[x][i])
+            {
+                ans=min(ans,deep);
+                return ;
+            }
+        }
+        for(int i=0;i<26;i++)
+            dfs(next[x][i],deep+1);
+    }
+}sam;
+int main()
+{
+    scanf("%s",s+1);
+    n=strlen(s+1);
+    sam.init();
+    for(int i=1;i<=n;i++)
+        sam.add(s[i]-'a');
+    sam.dfs(1,1);
+    printf("%d\n",ans);
+    return 0;
+}
