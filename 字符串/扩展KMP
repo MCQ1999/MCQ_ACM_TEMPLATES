@@ -4,6 +4,7 @@
 */
 /*
 extend[i]表示S[i...n]与T的最长公共前缀长度，而题意就是让你求所有的extend[i]。
+nxt[i]表示求T的每一个后缀与T的最长公共前缀长度
 */
 #include<bits/stdc++.h>
 
