@@ -1,0 +1,97 @@
+//https://nanti.jisuanke.com/t/A2018
+//求给定的字符串（只有大写字母）有多少个本质不同子串出现次数介于a，b之间
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn=1e5+5;
+char s[maxn];
+int n;
+struct Suffix_Automation
+{
+    int next[maxn*2][26],fa[maxn*2],l[maxn*2];
+    int last,cnt;
+    int cntA[maxn*2],A[maxn*2];
+    int right[maxn*2];
+    void init()
+    {
+        last=cnt=1;
+        fa[1]=l[1]=0;
+        memset(next,0,sizeof(next));
+        memset(right,0,sizeof(right));
+    }
+    void add(int c)
+    {
+        int p=last;
+        int np=++cnt;
+        memset(next[cnt],0,sizeof next[cnt]);
+        right[np]=1;
+        l[np]=l[p]+1;
+        last=np;
+        while(p&&!next[p][c])
+            next[p][c]=np,p=fa[p];
+        if(!p)
+            fa[np]=1;
+        else
+        {
+            int q=next[p][c];
+            if(l[q]==l[p]+1)
+                fa[np]=q;
+            else
+            {
+                int nq=++cnt;
+                l[nq]=l[p]+1;
+                memcpy(next[nq],next[q],sizeof next[q]);
+                fa[nq]=fa[q];
+                fa[np]=fa[q]=nq;
+                while(next[p][c]==q)
+                    next[p][c]=nq,p=fa[p];
+
+            }
+        }
+    }
+    void work()
+    {
+        memset(cntA,0,sizeof (cntA));
+        for(int i=1;i<=cnt;i++)
+            cntA[l[i]]++;
+        for(int i=1;i<=n;i++)
+            cntA[i]+=cntA[i-1];
+        for(int i=1;i<=cnt;i++)
+            A[cntA[l[i]]--]=i;
+        int p=1;
+        for(int i=1;i<=n;i++)
+        {
+            p=next[p][s[i]-'A'];
+            right[p]=1;
+        }
+        for(int i=cnt;i>=1;i--)
+        {
+            p=A[i];
+            if(fa[p])
+                right[fa[p]]+=right[p];
+        }
+    }
+}sam;
+int main()
+{
+    int a,b;
+    while(scanf(" %s ",s)!=EOF)
+    {
+        scanf("%d%d",&a,&b);
+        n=strlen(s);
+        sam.init();
+        for(int i=0;i<n;i++)
+            sam.add(s[i]-'A');
+        sam.work();
+        long long ans=0;
+        for(int i=1;i<=sam.cnt;i++)
+        {
+            if(a<=sam.right[i]&&sam.right[i]<=b)
+            {
+
+                ans+=sam.l[i]-sam.l[sam.fa[i]];//加上当前节点到父节点之间的不同子串个数
+            }
+        }
+        printf("%lld\n",ans);
+    }
+    return 0;
+}
