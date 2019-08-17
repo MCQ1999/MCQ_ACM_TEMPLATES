@@ -1,6 +1,9 @@
 /*有两个字符串a,b,要求输出b与a的每一个后缀的最长公共前缀长度
-输出第一行有lenb个数,为b的next数组(特别地,next1next_{1}next1​为lenb)
+输出第一行有lenb个数,为b的next数组
 第二行有lena个数,即答案
+*/
+/*
+extend[i]表示S[i...n]与T的最长公共前缀长度，而题意就是让你求所有的extend[i]。
 */
 #include<bits/stdc++.h>
 
