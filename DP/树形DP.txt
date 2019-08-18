@@ -154,6 +154,205 @@ int main()
     }
     return 0;
 }
+
 4.牛客370F
 题意:在一棵树中选一个点S，删除一些边使得所有叶子结点到达不了S。
 思路:设dp[i]表示以i为根的子树的所有叶子到达不了i的最小代价。dp[u]+=min(dp[v],w),v为u的孩子，w为u-v的边权。
+
+5.HDU2196给出一棵树，求离每个节点最远的点的距离
+dp[0][u]表示以u为根的子树中的结点与u的最远距离
+dp[1][u]表示以u为根的子树中的结点与u的次远距离
+这两个可以一遍dfs通过儿子结点转移得到。显然dp[0][u]就是u的一个可能的答案，即u往下走的最远距离，还缺一部分就是u往上走的最远距离：
+dp[2][u]表示u往上走的最远距离
+对于这个的转移，分两种情况，是这样的：
+    dp[2][v] = max( dp[0][u]+weight(u,v) , dp[2][u]+weight(u,v) ) （v是u的儿子 且 u往下走的最远距离不经过v）
+    dp[2][v] = max( dp[1][u]+weight(u,v) , dp[2][u]+weight(u,v) ) （v是u的儿子 且 u往下走的最远距离经过v）
+再一遍dfs就能得到。每个u的答案就是max(dp[0][u],dp[2][u]);
+思路参考：https://www.cnblogs.com/WABoss/p/5267488.html
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+#define MAXN 11111
+struct Edge{
+    int v,w,next;
+}edge[MAXN<<1];
+int NE,head[MAXN];
+void addEdge(int u,int v,int w){
+    edge[NE].v=v; edge[NE].w=w;
+    edge[NE].next=head[u]; head[u]=NE++;
+}
+long long d[3][MAXN];
+int idx[MAXN];
+void dfs0(int u,int fa){
+    long long mx0=0,mx1=0;
+    for(int i=head[u]; i!=-1; i=edge[i].next){
+        int v=edge[i].v;
+        if(v==fa) continue;
+        dfs0(v,u);
+        if(mx0<=d[0][v]+edge[i].w) mx1=mx0,mx0=d[0][v]+edge[i].w,idx[u]=v;
+        else if(mx1<d[0][v]+edge[i].w) mx1=d[0][v]+edge[i].w;
+        else if(mx1<d[1][v]+edge[i].w) mx1=d[1][v]+edge[i].w;
+    }
+    d[0][u]=mx0; d[1][u]=mx1;
+}
+void dfs1(int u,int fa){
+    for(int i=head[u]; i!=-1; i=edge[i].next){
+        int v=edge[i].v;
+        if(v==fa) continue;
+        if(idx[u]==v) d[2][v]=max(d[1][u]+edge[i].w,d[2][u]+edge[i].w);
+        else d[2][v]=max(d[0][u]+edge[i].w,d[2][u]+edge[i].w);
+        dfs1(v,u);
+    }
+}
+int main(){
+    int n,a,b;
+    while(~scanf("%d",&n)){
+        NE=0;
+        memset(head,-1,sizeof(head));
+        for(int i=2; i<=n; ++i){
+            scanf("%d%d",&a,&b);
+            addEdge(i,a,b); addEdge(a,i,b);
+        }
+        memset(d,0,sizeof(d));
+        dfs0(1,1);
+        dfs1(1,1);
+        for(int i=1; i<=n; ++i){
+            printf("%lld\n",max(d[0][i],d[2][i]));
+        }
+    }
+    return 0;
+}
+
+6.HDU5834给一棵树，点和边都有权值，经过一点可以加上该点的权值但最多只加一次，经过边会减去该边权值，问从各个点分别出发最多能获得多少权值。
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const int INF=0x3f3f3f3f;
+const int maxn=1e5+10;
+int T;
+int N;
+int val[maxn];
+int head[maxn];
+int dp[2][maxn];//0代表经过一些路,回到原来u点的最大值,1代表经过一些路,但不回来原来u点
+int tot;
+struct Edge
+{
+    int to;
+    int w;
+    int nex;
+};
+Edge edge[2*maxn];
+void addedge(int from,int to,int w)
+{
+    edge[tot].to=to;
+    edge[tot].w=w;
+    edge[tot].nex=head[from];
+    head[from]=tot++;
+}
+void init()
+{
+    memset(head,-1,sizeof(head));
+    tot=0;
+}
+
+void dfs1(int u,int fa)
+{
+    dp[0][u]=dp[1][u]=val[u];
+    for(int i=head[u]; i!=-1; i=edge[i].nex)
+    {
+        int v=edge[i].to;
+        if(v==fa)continue;
+        dfs1(v,u);
+        if(dp[0][v]-2*edge[i].w>0)
+        {
+            dp[0][u]+=dp[0][v]-2*edge[i].w;
+        }
+    }
+    for(int i=head[u]; i!=-1; i=edge[i].nex)
+    {
+        int v=edge[i].to;
+        if(v==fa)continue;
+
+        int mx=dp[0][u]-max(0,dp[0][v]-2*edge[i].w)+(dp[1][v]-edge[i].w);
+        if(mx>=dp[1][u])
+        {
+            dp[1][u]=mx;
+        }
+    }
+}
+void dfs2(int u, int fa, int Cost)
+{
+    int dir = u, tmp;
+    if(fa != -1 && dp[0][fa] - Cost * 2 > 0)
+    {
+        dp[0][u] += dp[0][fa] - Cost * 2;
+    }
+    tmp = dp[1][u] = dp[0][u];
+    for(int i = head[u]; i!=-1; i = edge[i].nex)
+    {
+        int v = edge[i].to;
+        int mx=dp[0][u] - max(0, dp[0][v] - edge[i].w * 2) + (dp[1][v] - edge[i].w);
+        if(mx >= dp[1][u])
+        {
+            dir = v;
+            tmp=dp[1][u];
+            dp[1][u] = mx;
+        }
+        else if(mx >= tmp)
+        {
+            tmp = mx;
+        }
+    }
+    int L = dp[0][u], R = dp[1][u];
+    for(int i = head[u]; i!=-1; i = edge[i].nex)
+    {
+        int v = edge[i].to;
+        if(v == fa) continue;
+
+        int mx=dp[0][v] - edge[i].w * 2;
+        if(mx > 0)
+        {
+            dp[0][u]-= mx;
+        }
+        if(dir == v)
+        {
+            dp[1][u] = tmp;
+        }
+        if(dp[0][v] - edge[i].w * 2 > 0)
+        {
+            dp[1][u] -= mx;
+        }
+        dfs2(v, u, edge[i].w);
+        dp[0][u] = L, dp[1][u] = R;
+    }
+}
+int main()
+{
+    scanf("%d",&T);
+    for(int cas=1; cas<=T; cas++)
+    {
+        init();
+        printf("Case #%d:\n",cas);
+        scanf("%d",&N);
+        for(int i=1; i<=N; i++)
+        {
+            scanf("%d",&val[i]);
+        }
+        int u,v,w;
+        for(int i=1; i<N; i++)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            addedge(u,v,w);
+            addedge(v,u,w);
+        }
+        dfs1(1,-1);
+        dfs2(1,-1,0);
+        for(int i=1; i<=N; i++)
+        {
+            printf("%d\n",max(dp[0][i],dp[1][i]));
+        }
+    }
+    return 0;
+}
+
