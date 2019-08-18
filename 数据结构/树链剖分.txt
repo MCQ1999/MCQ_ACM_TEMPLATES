@@ -1,8 +1,9 @@
-/*ÒÑÖªÒ»¿Ã°üº¬N¸ö½áµãµÄÊ÷£¨Á¬Í¨ÇÒÎŞ»·£©£¬Ã¿¸ö½ÚµãÉÏ°üº¬Ò»¸öÊıÖµ£¬ĞèÒªÖ§³ÖÒÔÏÂ²Ù×÷£º
-²Ù×÷1£º ¸ñÊ½£º 1 x y z ±íÊ¾½«Ê÷´Óxµ½y½áµã×î¶ÌÂ·¾¶ÉÏËùÓĞ½ÚµãµÄÖµ¶¼¼ÓÉÏz
-²Ù×÷2£º ¸ñÊ½£º 2 x y ±íÊ¾ÇóÊ÷´Óxµ½y½áµã×î¶ÌÂ·¾¶ÉÏËùÓĞ½ÚµãµÄÖµÖ®ºÍ
-²Ù×÷3£º ¸ñÊ½£º 3 x z ±íÊ¾½«ÒÔxÎª¸ù½ÚµãµÄ×ÓÊ÷ÄÚËùÓĞ½ÚµãÖµ¶¼¼ÓÉÏz
-²Ù×÷4£º ¸ñÊ½£º 4 x ±íÊ¾ÇóÒÔxÎª¸ù½ÚµãµÄ×ÓÊ÷ÄÚËùÓĞ½ÚµãÖµÖ®ºÍ
+1.ç‚¹æƒ
+/*å·²çŸ¥ä¸€æ£µåŒ…å«Nä¸ªç»“ç‚¹çš„æ ‘ï¼ˆè¿é€šä¸”æ— ç¯ï¼‰ï¼Œæ¯ä¸ªèŠ‚ç‚¹ä¸ŠåŒ…å«ä¸€ä¸ªæ•°å€¼ï¼Œéœ€è¦æ”¯æŒä»¥ä¸‹æ“ä½œï¼š
+æ“ä½œ1ï¼š æ ¼å¼ï¼š 1 x y z è¡¨ç¤ºå°†æ ‘ä»xåˆ°yç»“ç‚¹æœ€çŸ­è·¯å¾„ä¸Šæ‰€æœ‰èŠ‚ç‚¹çš„å€¼éƒ½åŠ ä¸Šz
+æ“ä½œ2ï¼š æ ¼å¼ï¼š 2 x y è¡¨ç¤ºæ±‚æ ‘ä»xåˆ°yç»“ç‚¹æœ€çŸ­è·¯å¾„ä¸Šæ‰€æœ‰èŠ‚ç‚¹çš„å€¼ä¹‹å’Œ
+æ“ä½œ3ï¼š æ ¼å¼ï¼š 3 x z è¡¨ç¤ºå°†ä»¥xä¸ºæ ¹èŠ‚ç‚¹çš„å­æ ‘å†…æ‰€æœ‰èŠ‚ç‚¹å€¼éƒ½åŠ ä¸Šz
+æ“ä½œ4ï¼š æ ¼å¼ï¼š 4 x è¡¨ç¤ºæ±‚ä»¥xä¸ºæ ¹èŠ‚ç‚¹çš„å­æ ‘å†…æ‰€æœ‰èŠ‚ç‚¹å€¼ä¹‹å’Œ
 */
 #include<bits/stdc++.h>
 using namespace std;
@@ -21,7 +22,7 @@ void add(int u,int v)
     nxt[tot]=head[u];
     head[u]=tot;
 }
-//ÒÔÏÂÎªÏß¶ÎÊ÷
+//ä»¥ä¸‹ä¸ºçº¿æ®µæ ‘
 int sum[N<<2],lzy[N<<2];
 int w[N];
 void pushUp(int rt)
@@ -78,7 +79,7 @@ int query(int L,int R,int l,int r,int rt)
     if(R >  m) ans+=query(L,R,m+1,r,rt<<1|1)%p;
     return ans%p;
 }
-//ÒÔÉÏÎªÏß¶ÎÊ÷
+//ä»¥ä¸Šä¸ºçº¿æ®µæ ‘
 void dfs1(int x,int f,int d)
 {
     dep[x]=d;
@@ -191,6 +192,182 @@ int main()
                 cin>>x;
                 cout<<qSon(x)<<endl;
             }
+        }
+    }
+    return 0;
+}
+
+2.è¾¹æƒ
+SPOJ - QTREE
+ä¸¤ç§æ“ä½œï¼Œä¿®æ”¹ç¬¬iæ¡è¾¹çš„è¾¹æƒï¼ŒæŸ¥è¯¢aåˆ°bè·¯å¾„çš„æœ€å¤§è¾¹æƒ
+#include <bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int inf = 0x3f3f3f3f, N = 1e4 + 5;
+int n, m, T;
+
+// çº¿æ®µæ ‘
+#define lson l, m, rt << 1
+#define rson m + 1, r, rt << 1 | 1
+int mx[N << 2];
+void pushUp(int rt)
+{
+    mx[rt] = max(mx[rt << 1], mx[rt << 1 | 1]);
+}
+void build(int l, int r, int rt)
+{
+    mx[rt] = 0;
+    if (l == r) return;
+    int m = (l + r) >> 1;
+    build(lson);
+    build(rson);
+}
+int query(int L, int R, int l, int r, int rt)
+{
+    if (L <= l && r <= R)
+        return mx[rt];
+    int m = (l + r) >> 1;
+    int ret = 0;
+    if (L <= m) ret = max(ret, query(L, R, lson));
+    if (R > m) ret = max(ret, query(L, R, rson));
+    return ret;
+}
+void update(int p, int x, int l, int r, int rt)
+{
+    if (l == r)
+    {
+        mx[rt] = x;
+        return;
+    }
+    int m = (r + l) >> 1;
+    if (p <= m) update(p, x, lson);
+    else update(p, x, rson);
+    pushUp(rt);
+}
+
+// æ ‘é“¾å‰–åˆ†
+struct Edge
+{
+    int to, next;
+} edge[N * 2];
+
+int head[N], tot;
+int top[N];  // top[v]å³væ‰€åœ¨é‡é“¾çš„é¡¶ç«¯ç»“ç‚¹
+int fa[N];   // çˆ¶èŠ‚ç‚¹
+int deep[N]; // æ·±åº¦
+int num[N];  // num[v] ä»¥vä¸ºæ ¹çš„å­æ ‘ç»“ç‚¹æ•°
+int p[N];    // p[v]ä¸ºvçš„dfsä½ç½®
+int fp[N];   // ä¸pç›¸å
+int son[N];  // é‡å­ç¼–å·
+int pos;
+
+void init()
+{
+    tot = 0;
+    pos = 0;
+    memset(head,-1,sizeof(head));
+    memset(son, -1,sizeof(son));
+}
+
+void add(int u, int v)
+{
+    edge[tot].to = v;
+    edge[tot].next = head[u];
+    head[u] = tot++;
+}
+
+void dfs1(int u, int pre, int d)
+{
+    deep[u] = d;
+    fa[u] = pre;
+    num[u] = 1;
+    for (int i = head[u]; i != -1; i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if (v != pre)
+        {
+            dfs1(v, u, d + 1);
+            num[u] += num[v];
+            if (son[u] == -1 || num[v] > num[son[u]])
+                son[u] = v;
+        }
+    }
+}
+
+void dfs2(int u, int sp)
+{
+    top[u] = sp;
+    p[u] = pos++;
+    fp[p[u]] = u;
+    if (son[u] == -1)
+        return;
+    dfs2(son[u], sp);
+    for (int i = head[u]; i != -1; i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if (v != son[u] && v != fa[u])
+            dfs2(v, v);
+    }
+}
+
+// æŸ¥è¯¢u->vè¾¹çš„max
+int queryMax(int u, int v)
+{
+    int f1 = top[u], f2 = top[v];
+    int tmp = 0;
+    while (f1 != f2)
+    {
+        if (deep[f1] < deep[f2])
+        {
+            swap(f1, f2);
+            swap(u, v);
+        }
+        tmp = max(tmp, query(p[f1], p[u], 0, pos - 1, 1));
+        u = fa[f1];
+        f1 = top[u];
+    }
+    if (u == v) return tmp;
+    if (deep[u] > deep[v]) swap(u, v);
+    return max(tmp, query(p[son[u]], p[v], 0, pos - 1, 1));
+}
+
+int e[N][3];
+
+// CHANGE i ti ä¿®æ”¹ç¬¬iæ¡è¾¹çš„å€¼ä¸ºti
+// QUERY a b è¯¢é—®aåˆ°bçš„æœ€å¤§è¾¹æƒ
+// DONE ç»“æŸç¬¦å·
+int main()
+{
+    scanf("%d", &T);
+    while (T--)
+    {
+        init();
+        scanf("%d", &n);
+        for(int i=0; i<n-1; i++)
+        {
+            scanf("%d%d%d", &e[i][0], &e[i][1], &e[i][2]);
+            add(e[i][0], e[i][1]);
+            add(e[i][1], e[i][0]);
+        }
+        dfs1(1, 0, 0);
+        dfs2(1, 1);
+        build(0, pos - 1, 1);
+        for(int i=0; i<n-1; i++)
+        {
+            if (deep[e[i][0]] > deep[e[i][1]])
+                swap(e[i][0], e[i][1]);
+            update(p[e[i][1]], e[i][2], 0, pos - 1, 1);
+        }
+        char op[10];
+        int u, v;
+        while (~scanf("%s", op))
+        {
+            if (op[0] == 'D') break;
+            scanf("%d %d", &u, &v);
+            if (op[0] == 'C')
+                update(p[e[u - 1][1]], v, 0, pos - 1, 1);
+            else
+                printf("%d\n", queryMax(u, v));
         }
     }
     return 0;
