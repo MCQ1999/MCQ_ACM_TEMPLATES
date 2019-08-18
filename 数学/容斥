@@ -1,0 +1,50 @@
+1.a到b与n互质的个数
+#include<bits/stdc++.h>
+#define MAXN 222222
+#define mod 4000010
+using namespace std;
+long long prime[1010],num;
+void Init(long long n)
+{
+    long long i;
+    num=0;
+    for(i=2;i*i<=n;++i)
+    {
+        if(n%i==0)
+        {
+            prime[num++]=i;
+            while(n%i==0)
+                n/=i;
+        }
+    }
+    if(n>1)
+        prime[num++]=n;//记录素因子个数;
+}
+long long solve(long long m)
+{
+    long long que[10000],i,j,k,t=0,sum=0;
+    que[t++]=-1;
+    for(i=0;i<num;++i)
+    {
+        k=t;
+        for(j=0;j<k;++j)
+            que[t++]=que[j]*prime[i]*(-1);
+    }
+    for(i=1;i<t;++i)
+        sum+=m/que[i];
+    return sum;
+}
+int main()
+{
+    int t,cnt=1;
+    long long a,b,n;
+    scanf("%d",&t);
+    while(t--)
+    {
+        scanf("%lld%lld%lld",&a,&b,&n);
+        Init(n);
+        long long ans=b-solve(b)-((a-1)-solve(a-1));
+        printf("Case #%d: %lld\n",cnt++,ans);
+    }
+    return 0;
+}
