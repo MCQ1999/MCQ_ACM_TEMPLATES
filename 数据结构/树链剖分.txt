@@ -372,3 +372,284 @@ int main()
     }
     return 0;
 }
+
+3.# 题意
+
+链接：https://cn.vjudge.net/problem/HDU-4729
+
+给你n个点,然你求两个点s和t之间的最大流.而且你有一定的钱k,可以进行两种操作
+1.在任意连个点之间建立一个单位1的流,费用a
+2.将原先的流扩大1个单位,费用b
+
+# 思路
+
+题目已经说了是一棵树，那么树上两点的最大流就是两点路径上的最小值。其实两种操作各一次对最大流的贡献是相等的。我们分类讨论：
+
+1. 如果a<=b，直接算第一种方案即可，直接给s、t连一条边，对答案的贡献是k/a。
+2. 如果a>b，分两种情况。如果k>a，我们可以先操作一次方案一，即先给s、t连一条边，再对这条边进行扩大，这种方法对答案的贡献是(k-a)/b+1；如果k<=a，那么我们只扩大，肯定是先把最小的边扩大了，再看扩大新的最小边……直接暴力肯定不行，我们二分最大流x，我们可以扩大k/b次，那么判断一下在k/b次内能不能使得s到t的最小值>=x即可。具体实现我们可以递归处理，看代码。
+
+# 代码
+
+```c++
+#include <bits/stdc++.h>
+using namespace std;
+#define ll long long
+#define int ll
+#define il inline
+const int inf = 0x3f3f3f3f, N = 1e5 + 5;
+//适用于正负数,(int,long long,float,double)
+template <class T>
+il bool read(T &ret)
+{
+    char c;
+    int sgn;
+    T bit=0.1;
+    if(c=getchar(),c==EOF) return 0;
+    while(c!='-'&&c!='.'&&(c<'0'||c>'9')) c=getchar();
+    sgn=(c=='-')?-1:1;
+    ret=(c=='-')?0:(c-'0');
+    while(c=getchar(),c>='0'&&c<='9') ret=ret*10+(c-'0');
+    if(c==' '||c=='\n')
+    {
+        ret*=sgn;
+        return 1;
+    }
+    while(c=getchar(),c>='0'&&c<='9') ret+=(c-'0')*bit,bit/=10;
+    ret*=sgn;
+    return 1;
+}
+// 线段树
+#define lson l, m, rt << 1
+#define rson m + 1, r, rt << 1 | 1
+int n, M, T;
+int head[N], tot;
+int top[N];  // top[v]即v所在重链的顶端结点
+int fa[N];   // 父节点
+int deep[N]; // 深度
+int num[N];  // num[v] 以v为根的子树结点数
+int p[N];    // p[v]为v的dfs位置
+int fp[N];   // 与p相反
+int son[N];  // 重子编号
+int pos;
+int mi[N << 2],val[N];
+void pushUp(int rt)
+{
+    mi[rt] = min(mi[rt << 1], mi[rt << 1 | 1]);
+}
+void build(int l, int r, int rt)
+{
+    mi[rt] = inf;
+    if (l == r)
+    {
+        mi[rt]=val[fp[l]];
+        return ;
+    }
+    int m = (l + r) >> 1;
+    build(lson);
+    build(rson);
+    pushUp(rt);
+}
+int query(int L, int R, int l, int r, int rt)
+{
+    if (L <= l && r <= R)
+        return mi[rt];
+    int m = (l + r) >> 1;
+    int ret = inf;
+    if (L <= m) ret = min(ret, query(L, R, lson));
+    if (R > m) ret = min(ret, query(L, R, rson));
+    return ret;
+}
+void update(int p, int x, int l, int r, int rt)
+{
+    if (l == r)
+    {
+        mi[rt] = x;
+        return;
+    }
+    int m = (r + l) >> 1;
+    if (p <= m) update(p, x, lson);
+    else update(p, x, rson);
+    pushUp(rt);
+}
+
+// 树链剖分
+struct Edge
+{
+    int to, next,w;
+} edge[N * 2];
+
+
+void init()
+{
+    tot = 0;
+    pos = 0;
+    memset(head,-1,sizeof(head));
+    memset(son, -1,sizeof(son));
+}
+
+void add(int u, int v,int w)
+{
+    edge[tot].to = v;
+    edge[tot].next = head[u];
+    edge[tot].w=w;
+    head[u] = tot++;
+}
+
+void dfs1(int u, int pre, int d)
+{
+    deep[u] = d;
+    fa[u] = pre;
+    num[u] = 1;
+    for (int i = head[u]; i != -1; i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if (v != pre)
+        {
+            val[v]=edge[i].w;
+            dfs1(v, u, d + 1);
+            num[u] += num[v];
+            if (son[u] == -1 || num[v] > num[son[u]])
+                son[u] = v;
+        }
+    }
+}
+
+void dfs2(int u, int sp)
+{
+    top[u] = sp;
+    p[u] = pos++;
+    fp[p[u]] = u;
+    if (son[u] == -1)
+        return;
+    dfs2(son[u], sp);
+    for (int i = head[u]; i != -1; i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if (v != son[u] && v != fa[u])
+            dfs2(v, v);
+    }
+}
+
+int queryMin(int u, int v)
+{
+    int f1 = top[u], f2 = top[v];
+    int tmp = inf;
+    while (f1 != f2)
+    {
+        if (deep[f1] < deep[f2])
+        {
+            swap(f1, f2);
+            swap(u, v);
+        }
+        tmp = min(tmp, query(p[f1], p[u], 0, pos - 1, 1));
+        u = fa[f1];
+        f1 = top[u];
+    }
+    if (u == v) return tmp;
+    if (deep[u] > deep[v]) swap(u, v);
+    return min(tmp, query(p[son[u]], p[v], 0, pos - 1, 1));
+}
+
+int all=0;
+bool fun(ll L,ll R,ll l,ll r,ll rt,ll x)
+{
+    if(L<=l&&r<=R&&mi[rt]>=x)
+    {
+        return true;
+    }
+    if(l==r)
+    {
+        if(mi[rt]>=x)
+            return true;
+        all-=(x-mi[rt]);
+        return all>=0;
+    }
+    int m=(l+r)>>1;
+    if(R<=m)
+    {
+        return fun(L,R,lson,x);
+    }
+    else if(L>m)
+    {
+        return fun(L,R,rson,x);
+    }
+    else
+        return fun(L,m,lson,x)&&fun(m+1,R,rson,x);
+}
+bool check(ll u,ll v,ll x)
+{
+    int f1 = top[u], f2 = top[v];
+    while (f1 != f2)
+    {
+        if (deep[f1] < deep[f2])
+        {
+            swap(f1, f2);
+            swap(u, v);
+        }
+        if(!fun(p[f1], p[u], 0, pos - 1, 1,x))
+            return false;
+        u = fa[f1];
+        f1 = top[u];
+    }
+    if (u == v) return true;
+    if (deep[u] > deep[v]) swap(u, v);
+    return fun(p[son[u]], p[v], 0, pos - 1, 1,x);
+}
+signed main()
+{
+    read(T);
+    int cs=0;
+    while (T--)
+    {
+        init();
+        read(n),read(M);
+        for(int i=0; i<n-1; i++)
+        {
+            ll u,v,w;
+            read(u),read(v),read(w);
+            add(u,v,w);
+            add(v,u,w);
+        }
+        dfs1(1, 0, 0);
+        dfs2(1, 1);
+        build(0, pos - 1, 1);
+        printf("Case #%lld:\n",++cs);
+        while (M--)
+        {
+            ll s,t,k,a,b;
+            read(s),read(t),read(k),read(a),read(b);
+            ll ans=queryMin(s,t);
+            if(k<min(a,b))
+            {
+                printf("%lld\n",ans);
+            }
+            else if(a<=b)
+            {
+                ans+=k/a;
+                printf("%lld\n",ans);
+            }
+            else
+            {
+                if(k>a)
+                    ans+=(k-a)/b+1;
+                ll l=ans,r=10000,mid;
+                while(l<=r)
+                {
+                    mid=(l+r)>>1;
+                    all=k/b;
+                    if(check(s,t,mid))
+                    {
+                        ans=mid;
+                        l=mid+1;
+                    }
+                    else
+                        r=mid-1;
+                }
+                printf("%lld\n",ans);
+            }
+
+        }
+    }
+    return 0;
+}
+```
