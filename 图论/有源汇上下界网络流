@@ -1,4 +1,4 @@
-/*ZOJ3229
+1./*ZOJ3229
 一个屌丝给m个女神拍照，计划拍照n天，每一天屌丝给给定的C个女神拍照，每天拍照数不能超过D张，而且给每个女神i拍照有数量限制[Li，Ri]，
 对于每个女神n天的拍照总和不能少于Gi，如果有解求屌丝最多能拍多少张照，并求每天给对应女神拍多少张照；否则输出-1。
 input:
@@ -180,5 +180,155 @@ void work()
 int main()
 {
     while(scanf("%d%d",&n,&m)!=EOF)work();
+    return 0;
+}
+
+/*2.给你一张二分图，一边n个点，另一边m个点，k条边，问你能不能通过删边，使得所有点的度数都在[L,R]
+https://nanti.jisuanke.com/t/A1994
+建图和上题类似
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=4005,maxm=100005;
+const int inf=0x7f7f7f7f;
+struct edge
+{
+    int to,next,w,num;
+} lst[maxm];
+int len=0,first[maxn],_first[maxn];
+void addedge(int a,int b,int w,int num)
+{
+    lst[len].num=num;
+    lst[len].to=b;
+    lst[len].next=first[a];
+    lst[len].w=w;
+    first[a]=len++;
+    lst[len].num=num;
+    lst[len].to=a;
+    lst[len].next=first[b];
+    lst[len].w=0;
+    first[b]=len++;
+}
+int q[maxn],vis[maxn],dis[maxn],T,s,t,head,tail,ss,tt;
+bool bfs()
+{
+    head=tail=0;
+    vis[s]=++T;
+    q[tail++]=s;
+    while(head!=tail)
+    {
+        int x=q[head++];
+        for(int pt=first[x]; pt!=-1; pt=lst[pt].next)
+        {
+            if(lst[pt].w&&vis[lst[pt].to]!=T)
+            {
+                vis[lst[pt].to]=T;
+                dis[lst[pt].to]=dis[x]+1;
+                q[tail++]=lst[pt].to;
+            }
+        }
+    }
+    if(vis[t]==T)memcpy(_first,first,sizeof(first));
+    return vis[t]==T;
+}
+int dfs(int x,int lim)
+{
+    if(x==t)return lim;
+    int flow=0,a;
+    for(int pt=_first[x]; pt!=-1; pt=lst[pt].next)
+    {
+        _first[x]=pt;
+        if(lst[pt].w&&dis[lst[pt].to]==dis[x]+1&&(a=dfs(lst[pt].to,min(lst[pt].w,lim-flow))))
+        {
+            lst[pt].w-=a;
+            lst[pt^1].w+=a;
+            flow+=a;
+            if(flow==lim)return flow;
+        }
+    }
+    return flow;
+}
+int dinic()
+{
+    int ans=0,x;
+    while(bfs())
+        while(x=dfs(s,inf))ans+=x;
+    return ans;
+}
+int totflow[maxn];
+void Add(int a,int b,int lo,int hi,int num)
+{
+    totflow[a]-=lo;
+    totflow[b]+=lo;
+    addedge(a,b,hi-lo,num);
+}
+int low[maxm],ans[maxm];
+int n,m,tot,k;
+void bound_flow()
+{
+    int sum=0;
+    for(int i=s; i<=t; ++i)
+    {
+        if(totflow[i]<0)
+        {
+            addedge(i,tt,-totflow[i],0);
+        }
+        else
+        {
+            sum+=totflow[i];
+            addedge(ss,i,totflow[i],0);
+        }
+    }
+    addedge(t,s,0x7f7f7f7f,0);
+    int tmps=s,tmpt=t;
+    s=ss;
+    t=tt;
+    if(dinic()==sum)
+    {
+        puts("Yes");
+    }
+    else
+    {
+        puts("No");
+    }
+}
+int cs=0,L,R;
+void work()
+{
+    scanf("%d%d",&L,&R);
+    s=0;
+    t=n+m+1;
+    ss=n+m+2;
+    tt=n+m+3;
+    memset(first,-1,sizeof(first));
+    len=0;
+    memset(totflow,0,sizeof(totflow));
+    int x,y;
+    for(int i=1; i<=m; ++i)
+    {
+        Add(s,i,L,R,0);
+    }
+    for(int i=1; i<=m; i++)
+    {
+        Add(i+n,t,L,R,0);
+    }
+    int l,h;
+    tot=0;
+    for(int i=1; i<=k; ++i)
+    {
+        ++tot;
+        int u,v;
+        scanf("%d%d",&u,&v);
+        Add(u,v+n,0,1,tot);
+        low[tot]=l;
+    }
+    printf("Case %d: ",++cs);
+    bound_flow();
+}
+int main()
+{
+    while(scanf("%d%d%d",&n,&m,&k)!=EOF)work();
     return 0;
 }
