@@ -1,0 +1,102 @@
+//模型:一个网络,求出一个流,使得每条边的流量必须>=Li且<=Hi,每个点必须满足总流入量=总流出量(流量守恒)(这个流的特点是循环往复,无始无终)
+/*1.zoj2314
+给n个点，及m根pipe，每根pipe用来流躺液体的，单向的，每时每刻每根pipe流进来的物质要等于流出去的物质，要使得m条pipe组成一个循环体，里面流躺物质。
+并且满足每根pipe一定的流量限制，范围为[Li,Ri].即要满足每时刻流进来的不能超过Ri(最大流问题)，同时最小不能低于Li。
+Input
+The first line of the input file contains the number N (1 <= N <= 200) – the number of nodes and and M – the number of pipes. 
+The following M lines contain four integer number each – i, j, lij and cij each. There is at most one pipe connecting any two nodes 
+and 0 <= lij <= cij <= 10^5 for all pipes. No pipe connects a node to itself. If there is a pipe from i-th node to j-th, there is no pipe 
+from j-th node to i-th.
+Output
+On the first line of the output file print YES if there is the way to carry out reactor cooling and NO if there is none.
+In the first case M integers must follow, k-th number being the amount of liquid flowing by the k-th pipe. Pipes are numbered as 
+they are given in the input file.
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=300,maxm=100000;
+struct edge{
+  int to,next,w,num;
+}lst[maxm];int len=0,first[maxn],_first[maxn];
+void addedge(int a,int b,int w,int num){
+  lst[len].num=num;
+  lst[len].to=b;lst[len].next=first[a];lst[len].w=w;first[a]=len++;
+  lst[len].num=num;
+  lst[len].to=a;lst[len].next=first[b];lst[len].w=0;first[b]=len++;
+}
+int vis[maxn],dis[maxn],q[maxn],head,tail,s,t,T;
+bool bfs(){
+  vis[s]=++T;dis[s]=1;head=tail=0;q[tail++]=s;
+  while(head!=tail){
+    int x=q[head++];
+    for(int pt=first[x];pt!=-1;pt=lst[pt].next){
+      if(lst[pt].w&&vis[lst[pt].to]!=T){
+    vis[lst[pt].to]=T;dis[lst[pt].to]=dis[x]+1;q[tail++]=lst[pt].to;
+      }
+    }
+  }
+  if(vis[t]==T)memcpy(_first,first,sizeof(first));
+  return vis[t]==T;
+}
+int dfs(int x,int lim){
+  if(x==t){
+    return lim;
+  }
+  int flow=0,a;
+  for(int pt=_first[x];pt!=-1;pt=lst[pt].next){
+    _first[x]=pt;
+    if(lst[pt].w&&dis[lst[pt].to]==dis[x]+1&&(a=dfs(lst[pt].to,min(lst[pt].w,lim-flow)))){
+      lst[pt].w-=a;lst[pt^1].w+=a;flow+=a;
+      if(flow==lim)return flow;
+    }
+  }
+  return flow;
+}
+int dinic(){
+  int ans=0,x;
+  while(bfs())
+    while(x=dfs(s,0x7f7f7f7f))ans+=x;
+  return ans;
+}
+int low[maxm],ans[maxm];
+int totflow[maxn],n,m;
+ 
+void work(){
+  memset(totflow,0,sizeof(totflow));
+  memset(first,-1,sizeof(first));len=0;
+  scanf("%d%d",&n,&m);
+  int u,v,b;
+  s=0;t=n+1;
+  for(int i=1;i<=m;++i){
+    scanf("%d%d%d%d",&u,&v,&low[i],&b);
+    addedge(u,v,b-low[i],i);totflow[u]-=low[i];totflow[v]+=low[i];
+  }
+  int sum=0;
+  for(int i=1;i<=n;++i){
+    if(totflow[i]<0){
+      addedge(i,t,-totflow[i],0);
+    }else{
+      sum+=totflow[i];
+      addedge(s,i,totflow[i],0);
+    }
+  }
+  if(dinic()==sum){
+    puts("YES");
+    for(int i=1;i<=n;++i){
+      for(int pt=first[i];pt!=-1;pt=lst[pt].next){
+    if(lst[pt].num==0||pt%2==0)continue;
+    ans[lst[pt].num]=lst[pt].w+low[lst[pt].num];
+      }
+    }
+    for(int i=1;i<=m;++i)printf("%d\n",ans[i]);
+  }else puts("NO");
+}
+int main(){
+  int tests;scanf("%d",&tests);
+  while(tests--){
+    work();if(tests)printf("\n");
+  }
+  return 0;
+}
