@@ -1,0 +1,182 @@
+/*ZOJ3229
+一个屌丝给m个女神拍照，计划拍照n天，每一天屌丝给给定的C个女神拍照，每天拍照数不能超过D张，而且给每个女神i拍照有数量限制[Li，Ri]，
+对于每个女神n天的拍照总和不能少于Gi，如果有解求屌丝最多能拍多少张照，并求每天给对应女神拍多少张照；否则输出-1。
+input:
+There are about 40 cases. Process to the end of file.
+Each case begins with two integers 1 <= n <= 365, 1 <= m <= 1000. Then m integers, G1, G2, ..., Gm in range [0, 10000]. Then n days. 
+Each day begins with two integer 1 <= C <= 100, 0 <= D <= 30000.Then C different targets.
+Each target is described by three integers, 0 <= T < m, 0 <= L <= R <= 100. 
+output:
+For each case, first output the number of photos Aya can take, -1 if it's impossible to satisfy her needing. 
+If there is a best strategy, output the number of photos of each girl Aya should take at each day on separate lines. 
+The output must be in the same order as the input. If there are more than one best strategy, any one will be OK.
+Output a blank line after each case. 
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=2005,maxm=100005;
+const int inf=0x7f7f7f7f;
+struct edge
+{
+    int to,next,w,num;
+} lst[maxm];
+int len=0,first[maxn],_first[maxn];
+void addedge(int a,int b,int w,int num)
+{
+    lst[len].num=num;
+    lst[len].to=b;
+    lst[len].next=first[a];
+    lst[len].w=w;
+    first[a]=len++;
+    lst[len].num=num;
+    lst[len].to=a;
+    lst[len].next=first[b];
+    lst[len].w=0;
+    first[b]=len++;
+}
+int q[maxn],vis[maxn],dis[maxn],T,s,t,head,tail,ss,tt;
+bool bfs()
+{
+    head=tail=0;
+    vis[s]=++T;
+    q[tail++]=s;
+    while(head!=tail)
+    {
+        int x=q[head++];
+        for(int pt=first[x]; pt!=-1; pt=lst[pt].next)
+        {
+            if(lst[pt].w&&vis[lst[pt].to]!=T)
+            {
+                vis[lst[pt].to]=T;
+                dis[lst[pt].to]=dis[x]+1;
+                q[tail++]=lst[pt].to;
+            }
+        }
+    }
+    if(vis[t]==T)memcpy(_first,first,sizeof(first));
+    return vis[t]==T;
+}
+int dfs(int x,int lim)
+{
+    if(x==t)return lim;
+    int flow=0,a;
+    for(int pt=_first[x]; pt!=-1; pt=lst[pt].next)
+    {
+        _first[x]=pt;
+        if(lst[pt].w&&dis[lst[pt].to]==dis[x]+1&&(a=dfs(lst[pt].to,min(lst[pt].w,lim-flow))))
+        {
+            lst[pt].w-=a;
+            lst[pt^1].w+=a;
+            flow+=a;
+            if(flow==lim)return flow;
+        }
+    }
+    return flow;
+}
+int dinic()
+{
+    int ans=0,x;
+    while(bfs())
+        while(x=dfs(s,inf))ans+=x;
+    return ans;
+}
+int totflow[maxn];
+void Add(int a,int b,int lo,int hi,int num)
+{
+    totflow[a]-=lo;
+    totflow[b]+=lo;
+    addedge(a,b,hi-lo,num);
+}
+int low[maxm],ans[maxm];
+int n,m,tot;
+void bound_flow()
+{
+    int sum=0;
+    for(int i=s; i<=t; ++i)
+    {
+        if(totflow[i]<0)
+        {
+            addedge(i,tt,-totflow[i],0);
+        }
+        else
+        {
+            sum+=totflow[i];
+            addedge(ss,i,totflow[i],0);
+        }
+    }
+    addedge(t,s,0x7f7f7f7f,0);
+    int tmps=s,tmpt=t;
+    s=ss;
+    t=tt;
+    if(dinic()==sum)
+    {
+        for(int pt=first[ss]; pt!=-1; pt=lst[pt].next)
+        {
+            lst[pt].w=lst[pt^1].w=0;
+        }
+        for(int pt=first[tt]; pt!=-1; pt=lst[pt].next)
+        {
+            lst[pt].w=lst[pt^1].w=0;
+        }
+        int flow0=lst[len-1].w;
+        lst[len-1].w=lst[len-2].w=0;
+        s=tmps;
+        t=tmpt;
+        printf("%d\n",flow0+dinic());
+        for(int i=1; i<=m; ++i)
+        {
+            for(int pt=first[i+n]; pt!=-1; pt=lst[pt].next)
+            {
+                if(lst[pt].num!=0)
+                {
+                    ans[lst[pt].num]=lst[pt].w+low[lst[pt].num];
+                }
+            }
+        }
+        for(int i=1; i<=tot; ++i)printf("%d\n",ans[i]);
+    }
+    else
+    {
+        printf("-1\n");
+    }
+}
+
+void work()
+{
+    s=0;
+    t=n+m+1;
+    ss=n+m+2;
+    tt=n+m+3;
+    memset(first,-1,sizeof(first));
+    len=0;
+    memset(totflow,0,sizeof(totflow));
+    int x,y;
+    for(int i=1; i<=m; ++i)
+    {
+        scanf("%d",&x);
+        Add(n+i,t,x,inf,0);
+    }
+    int l,h;
+    tot=0;
+    for(int i=1; i<=n; ++i)
+    {
+        scanf("%d%d",&x,&y);
+        Add(s,i,0,y,0);
+        for(int j=1; j<=x; ++j)
+        {
+            ++tot;
+            scanf("%d%d%d",&y,&l,&h);
+            Add(i,n+y+1,l,h,tot);
+            low[tot]=l;
+        }
+    }
+    bound_flow();
+    printf("\n");
+}
+int main()
+{
+    while(scanf("%d%d",&n,&m)!=EOF)work();
+    return 0;
+}
