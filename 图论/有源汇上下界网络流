@@ -11,6 +11,8 @@ For each case, first output the number of photos Aya can take, -1 if it's imposs
 If there is a best strategy, output the number of photos of each girl Aya should take at each day on separate lines. 
 The output must be in the same order as the input. If there are more than one best strategy, any one will be OK.
 Output a blank line after each case. 
+建图：
+增设一源点st，汇点sd，st到第i天连一条上界为Di下界为0的边，每个女神到汇点连一条下界为Gi上界为oo的边，对于每一天，当天到第i个女孩连一条[Li，Ri]的边。
 */
 #include<cstdio>
 #include<cstring>
