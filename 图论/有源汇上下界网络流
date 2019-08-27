@@ -332,3 +332,98 @@ int main()
     while(scanf("%d%d%d",&n,&m,&k)!=EOF)work();
     return 0;
 }
+
+/*3.有源汇上下界最小流
+bzoj2502 
+给定一张DAG图，求最少的链(可重复)使之覆盖所有的边 
+input
+输入文件的第一行包含一个整数n (2 <= n <= 100) – 代表滑雪场的地点的数量。接下来的n行，描述1~n号地点出发的斜坡，第i行的第一个数为mi (0 <= mi < n) ，
+后面共有mi个整数，由空格隔开，每个整数aij互不相同，代表从地点i下降到地点aij的斜坡。每个地点至少有一个斜坡与之相连。
+output
+最少的链数
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=205,maxm=100005;
+struct edge{
+  int to,next,w;
+}lst[maxm];int len=0,first[maxn],_first[maxn];
+void addedge(int a,int b,int w){//printf("Add %d %d\n",a,b);
+  lst[len].to=b;lst[len].next=first[a];lst[len].w=w;first[a]=len++;
+  lst[len].to=a;lst[len].next=first[b];lst[len].w=0;first[b]=len++;
+}
+int q[maxn],vis[maxn],dis[maxn],head,tail,s,t,T,ss,tt;
+bool bfs(){
+  head=tail=0;vis[s]=++T;dis[s]=1;q[tail++]=s;
+  while(head!=tail){
+    int x=q[head++];
+    for(int pt=first[x];pt!=-1;pt=lst[pt].next){
+      if(lst[pt].w&&vis[lst[pt].to]!=T){
+    vis[lst[pt].to]=T;dis[lst[pt].to]=dis[x]+1;q[tail++]=lst[pt].to;
+      }
+    }
+  }
+  if(vis[t]==T)memcpy(_first,first,sizeof(first));
+  return vis[t]==T;
+}
+int dfs(int x,int lim){
+  if(x==t)return lim;
+  int flow=0,a;
+  for(int pt=_first[x];pt!=-1;pt=lst[pt].next){
+    _first[x]=pt;
+    if(lst[pt].w&&dis[lst[pt].to]==dis[x]+1&&(a=dfs(lst[pt].to,min(lst[pt].w,lim-flow)))){
+      lst[pt].w-=a;lst[pt^1].w+=a;flow+=a;
+      if(flow==lim)return flow;
+    }
+  }
+  return flow;
+}
+int dinic(){
+  int ans=0,x;
+  while(bfs()){
+    while(x=dfs(s,0x7f7f7f7f))ans+=x;
+  }
+  return ans;
+}
+int totflow[maxn];
+void del(int x){
+  for(int pt=first[x];pt!=-1;pt=lst[pt].next)lst[pt].w=lst[pt^1].w=0;
+}
+int main(){
+  int n;scanf("%d",&n);
+  int x,y;
+  memset(first,-1,sizeof(first));
+  for(int i=1;i<=n;++i){
+    scanf("%d",&x);
+    for(int j=1;j<=x;++j){
+      scanf("%d",&y);
+      totflow[i]--;totflow[y]++;
+      addedge(i,y,0x7f7f7f7f);
+    }
+  }
+ 
+  s=0;t=n+1;ss=n+2,tt=n+3;
+  for(int i=1;i<=n;++i){
+    addedge(s,i,0x7f7f7f7f);
+    addedge(i,t,0x7f7f7f7f);
+  }
+  for(int i=1;i<=n;++i){
+    if(totflow[i]<0){
+      addedge(i,tt,-totflow[i]);
+    }else{
+      addedge(ss,i,totflow[i]);
+    }
+  }
+  addedge(t,s,0x7f7f7f7f);
+  int tmps=s,tmpt=t;
+  s=ss;t=tt;
+  dinic();
+  int flow0=lst[len-1].w;
+  lst[len-1].w=lst[len-2].w=0;
+  del(ss);del(tt);
+  s=tmpt;t=tmps;
+  printf("%d\n",flow0-dinic());
+  return 0;
+}
