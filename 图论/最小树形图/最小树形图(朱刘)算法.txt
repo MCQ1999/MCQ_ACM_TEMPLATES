@@ -1,4 +1,177 @@
-/*
-POJ 3164 ��С����ͼģ����
-��Ŀ���⣺����һ������ͼ�����ڵ���֪���������ͼ����С����ͼ����С����ͼ������ͼ����С������������Ϊ��ѡ��һЩ�ߣ�ʹ�ø��ڵ��ܹ�����ͼ�����еĽڵ㣬��ʹ��ѡ���ıߵı�Ȩ����С��
+/*1.坐标版
+POJ 3164 最小树形图模板题
+题目大意：给定一个有向图，根节点已知，求该有向图的最小树形图。最小树形图即有向图的最小生成树，定义为：选择一些边，使得根节点能够到达图中所有的节点，并使得选出的边的边权和最小。
 */
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cmath>
+using namespace std;
+const int N = 100 + 7;
+const int INF = 1e9;
+double G[N][N];  // 图，不能到达设为INF
+int n, m;
+double x[N], y[N];
+int p[N];   // 点的前驱
+int vis[N];
+bool in[N];  // 点是否被删掉
+
+double Distance(double a, double b)
+{
+    return sqrt(a * a + b * b);
+}
+
+void dfs(int u)
+{
+    for(int i = 1; i <= n; ++i)
+    {
+        if(!vis[i] && G[u][i] < INF)
+        {
+            vis[i] = 1;
+            dfs(i);
+        }
+    }
+}
+
+double slove(int u)
+{
+    memset(vis, 0, sizeof(vis));
+    vis[u] = 1;
+    dfs(1);
+    for(int i = 1; i <= n; ++i)
+        if(!vis[i]) return -1;  // 图必须是联通的
+    memset(vis, 0, sizeof(vis));
+    memset(in, false, sizeof(in));
+    for(int i = 1; i <= n; ++i) G[i][i] = INF;
+    double ans = 0;
+    while(true)
+    {
+        for(int i = 1; i <= n; ++i)  ///为除了根节点以外的所有点选择一个权值最小的入边
+            if(i != u && !in[i])    ///除了根节点以及被删除的点
+            {
+                p[i] = i;
+                for(int j = 1; j <= n; ++j)
+                    if(!in[j] && G[j][i] < G[p[i]][i])
+                        p[i] = j;
+            }
+        bool ok = false;
+        int i;
+        for(i = 1; i <= n; ++i)  /// 判断是否有环
+            if(i != u && !in[i])
+            {
+                int cnt = 0, j = i;
+                while(j != u && p[j] != i && cnt <= n) ++cnt, j = p[j];
+                if(j == u || cnt > n) continue;  //没有环
+
+                ok = true;  // 有环
+                break;
+            }
+        if(!ok)    //没有环，加和退出
+        {
+            for(int i = 1; i <= n; ++i)
+                if(i != u && !in[i]) ans += G[p[i]][i];
+            return ans;
+        }
+        memset(vis, 0, sizeof(vis));
+        int j = i;
+        do    /// 缩点 把环缩成i一个点
+        {
+            ans += G[p[j]][j];
+            vis[j] = 1;
+            in[j] = 1;
+            j = p[j];
+        }
+        while(i != j);
+        in[i] = 0; /// 别忘了
+
+        for(int k = 1; k <= n; ++k)  /// 修改距离
+            if(vis[k])
+            {
+                for(j = 1; j <= n; ++j)
+                    if(vis[j] == 0)
+                    {
+                        if(G[i][j] > G[k][j]) G[i][j] = G[k][j];
+                        if(G[j][k] < INF && G[j][k] - G[p[k]][k] < G[j][i])
+                            G[j][i] = G[j][k] - G[p[k]][k];
+                    }
+            }
+    }
+    return ans;
+}
+int main()
+{
+    while(scanf("%d%d", &n, &m) != EOF)
+    {
+        for(int i = 1; i <= n; ++i)
+            scanf("%lf%lf", &x[i], &y[i]);
+        int u, v;
+        for(int i = 0; i <= n; ++i)
+            for(int j = 0; j <= n; ++j) G[i][j] = INF;
+        for(int i = 1; i <= m; ++i)
+        {
+            scanf("%d%d", &u, &v);
+            if(u == v) continue;  //去掉自环
+            double d = Distance(x[u] - x[v], y[u] - y[v]);
+            if(d < G[u][v]) G[u][v] = d;  // 重边选最小
+        }
+        double ans = slove(1);
+        if(ans >= 0) printf("%.2f\n", ans);
+        else printf("poor snoopy\n");
+    }
+    return 0;
+}
+
+/* 2. 图版
+洛谷p4716
+给定包含 n 个结点， m 条有向边的一个图。试求一棵以结点 r 为根的最小树形图，并输出最小树形图每条边的权值之和，如果没有以 r 为根的最小树形图，输出−1。
+*/
+#include<bits/stdc++.h>
+using namespace std;
+const int N=106,M=10006,inf=2e8;
+int n,m,rt,t,cnt=0,id[N],pre[N],ine[N],vis[N];
+struct line
+{
+    int x,y,c;
+} q[M];
+int zl()
+{
+    int ans=0;
+    while(true)
+    {
+        cnt=0;
+        for(int i=1; i<=n; ++i) ine[i]=inf,vis[i]=0,id[i]=0; //预处理
+        for(int i=1; i<=m; ++i) if(q[i].x!=q[i].y&&ine[q[i].y]>q[i].c) ine[q[i].y]=q[i].c,pre[q[i].y]=q[i].x; //每个点的最短边
+        for(int i=1; i<=n; ++i) if(i!=rt&&ine[i]==inf) return -1; //有点无最短边
+        for(int i=1; i<=n; ++i)
+        {
+            if(i==rt) continue;
+            ans+=ine[i],t=i;
+            while(vis[t]!=i&&!id[t]&&t!=rt) vis[t]=i,t=pre[t];
+            //能走到环的点或者换上的点停下
+            if(!id[t]&&t!=rt)
+            {
+                id[t]=++cnt; //将环上的点标记为新的环
+                for(int o=pre[t]; o!=t; o=pre[o]) id[o]=cnt;
+            }
+        }//找环
+        if(!cnt) break;//无环结束
+        for(int i=1; i<=n; ++i) if(!id[i]) id[i]=++cnt;
+        for(int i=1; i<=m; ++i)
+        {
+            t=q[i].y,q[i].x=id[q[i].x],q[i].y=id[q[i].y];
+            if(q[i].x!=q[i].y) q[i].c-=ine[t];
+        }
+        n=cnt,rt=id[rt];
+        //去旧图,换新图
+    }
+    return ans;
+}
+int main()
+{
+    scanf("%d%d%d",&n,&m,&rt);
+    for(int i=1; i<=m; ++i) scanf("%d%d%d",&q[i].x,&q[i].y,&q[i].c);
+    printf("%d\n",zl());
+    return 0;
+}
