@@ -1,0 +1,51 @@
+//O(n)判断T个字符串是不是原串的子序列
+#include<bits/stdc++.h>
+using namespace std;
+const int N=1e6+5;
+char str[N];
+char s[N];
+int nxt[N][30];
+
+void getnext()
+{
+    memset(nxt, 0, sizeof(nxt));//初始化为0代表i位置之后没有该字符
+    int len = strlen(str + 1);//长度相应的从1下标开始
+    for(int i = len; i >= 1; i --)
+    {
+        for(int j = 0; j < 26; j ++)
+        {
+            nxt[i - 1][j] = nxt[i][j];//str i-1位置继承str i位置的离其它字符最近的位置是第几个
+        }
+        nxt[i - 1][str[i] - 'a'] = i;// str i-1位置离str[i]字符的最近位置变为第i个.
+    }
+}
+
+int main()
+{
+    scanf("%s", str + 1);
+    getnext(); //获得序列自动机的next数组
+    int T;
+    scanf("%d", &T);
+    getchar();
+    while(T --)
+    {
+        int flag = 1;
+        scanf("%s", s);
+        int len = strlen(s);//模式串长度
+        int now = 0;//起点0记录了所有字符的最近位置,从0开始找
+        for(int i = 0; i < len; i ++)
+        {
+            now = nxt[now][s[i] - 'a'];
+            if(!now)//如果查到某个字符结果为0说明now位置之后不再有该字符,标记跳出
+            {
+                flag = 0;
+                break;
+            }
+        }
+        if(flag)
+            printf("Yes\n");
+        else
+            printf("No\n");
+    }
+    return 0;
+}
