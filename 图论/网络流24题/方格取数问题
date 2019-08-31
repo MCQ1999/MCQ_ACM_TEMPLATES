@@ -1,0 +1,140 @@
+//二分图点权最大独立集
+/*题目描述
+在一个有 m*n 个方格的棋盘中，每个方格中有一个正整数。现要从方格中取数，使任意 2 个数所在方格没有公共边，且取出的数的总和最大。试设计一个满足要求的取数算法。对于给定的方格棋盘，按照取数要求编程找出总和最大的数。
+输入格式
+第 1 行有 2 个正整数 m 和 n，分别表示棋盘的行数和列数。接下来的 m 行，每行有 n 个正整数，表示棋盘方格中的数。
+输出格式
+程序运行结束时，将取数的最大总和输出*/
+/*
+最大点权独立集=最大点权数-最大匹配数，最小割=最大流=最大匹配数
+我们对棋盘进行黑白染色（（横坐标+纵坐标）%2==1的点设为黑点），可以发现，若取一个黑格的点，受到影响的就是周围的白点。
+于是我们可以建一个二分图。
+然后可以发现这是一个最小割的套路题，假设所有的点都取，然后去掉最小割，就是答案了。
+建模：S->黑点，容量为点权
+白点->T，容量为点权
+每一个黑点->取该黑点会受到影响的白点，容量为inf
+*/
+#include<bits/stdc++.h>
+using namespace std;
+int qmax(int &x,int y)
+{
+    if (x<y) x=y;
+}
+int qmin(int &x,int y)
+{
+    if (x>y) x=y;
+}
+int read()
+{
+    char s;
+    int k=0,base=1;
+    while((s=getchar())!='-'&&s!=EOF&&!(isdigit(s)));
+    if(s==EOF)exit(0);
+    if(s=='-')base=-1,s=getchar();
+    while(isdigit(s))
+    {
+        k=k*10+(s^'0');
+        s=getchar();
+    }
+    return k*base;
+}
+const int maxn=10003;
+const int maxm=80010;
+int S,T,n,m,id,X,Y;
+int to[maxm],ne[maxm],w[maxm],po[maxn];
+int h[maxn];
+int Q[maxn/2],l,r;
+int d1;
+int ID(int x,int y)
+{
+    return (x-1)*m+y;
+}
+void add(int x,int y,int z)
+{
+    id++;
+    to[id]=y;
+    w[id]=z;
+    ne[id]=po[x];
+    po[x]=id;
+}
+bool bfs()
+{
+    memset(h,-1,sizeof(h));
+    h[S]=1;
+    l=0;
+    r=1;
+    Q[r]=S;
+    while (l!=r)
+    {
+        l++;
+        if (l==maxn) l=1;
+        int u=Q[l],v=0;
+        for (int i=po[u]; i; i=ne[i])
+        {
+            v=to[i];
+            if (h[v]==-1&&w[i]>0)
+            {
+                h[v]=h[u]+1;
+                r++;
+                if (r==maxn) r=1;
+                Q[r]=v;
+            }
+        }
+    }
+    return h[T]!=-1;
+}
+int dfs(int u,int low)
+{
+    if (u==T||low==0) return low;
+    int used=0,v,W;
+    for (int i=po[u]; i; i=ne[i])
+    {
+        if (h[to[i]]==h[u]+1)
+        {
+            v=to[i];
+            W=dfs(v,min(w[i],low-used));
+            used+=W;
+            w[i]-=W;
+            w[i^1]+=W;
+            if (used==low) return low;
+        }
+    }
+    if (used==0) h[u]=-1;
+    return used;
+}
+int a;
+int fx[4][2]= {{-1,0},{0,-1},{1,0},{0,1}};
+long long sum=0;
+int main()
+{
+    id=1;
+    n=read();
+    m=read();
+    S=n*m+1;
+    T=n*m+2;
+    for (int i=1; i<=n; i++)
+        for (int j=1; j<=m; j++)
+        {
+            //所有点和起点或终点连边
+            a=read();
+            sum+=a;
+            if ((i+j)%2==1) add(S,(i-1)*m+j,a),add((i-1)*m+j,S,0);
+            else add((i-1)*m+j,T,a),add(T,(i-1)*m+j,0);
+        }
+    for (int i=1; i<=n; i++)
+        for (int j=1; j<=m; j++)
+        {
+            if ((i+j)%2==1) //连边
+            {
+                for (int k=0; k<4; k++)
+                {
+                    X=i+fx[k][0];
+                    Y=j+fx[k][1];
+                    if (X<=0||Y<=0||X>n||Y>m) continue;//判越界
+                    add((i-1)*m+j,(X-1)*m+Y,1e8),add((X-1)*m+Y,(i-1)*m+j,0);
+                }
+            }
+        }
+    while (bfs()) sum-=dfs(S,1e9);//跑一遍dinic
+    printf("%lld\n",sum);
+}
