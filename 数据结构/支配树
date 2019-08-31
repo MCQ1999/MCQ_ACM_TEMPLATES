@@ -1,0 +1,251 @@
+//当占据了x点后，若从S出发到不了y点了，那么x就是y的支配点。而支配树，就是满足树上一个点x的所有祖先都是它的支配点的树。
+/*1.HDU4694
+起点为n，求每个点支配的点的编号和
+*/
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+const int N=2e5+5,M=6e5+5;
+int n,m,tim;
+int dfn[N],repos[N],mi[N],fa[N],f[N],semi[N],idom[N],ans[N];
+struct graph
+{
+    int tot,h[N],ne[M],to[M];
+    void clear()
+    {
+        tot=0;    //此题数据有误所以应从i=0开始清空
+        for(int i=0; i<=n; ++i) h[i]=0;
+    }
+    void add(int x,int y)
+    {
+        to[++tot]=y,ne[tot]=h[x],h[x]=tot;
+    }
+} g,rg,ng,tr;
+
+void init()
+{
+    tim=0;
+    g.clear(),rg.clear(),ng.clear(),tr.clear();
+    for(int i=1; i<=n; ++i)
+        repos[i]=dfn[i]=idom[i]=fa[i]=ans[i]=0,mi[i]=semi[i]=f[i]=i;
+}
+void tarjan(int x)
+{
+    dfn[x]=++tim,repos[tim]=x;
+    for(int i=g.h[x]; i; i=g.ne[i])
+        if(!dfn[g.to[i]]) fa[g.to[i]]=x,tarjan(g.to[i]);
+}
+int find(int x)
+{
+    if(x==f[x]) return x;
+    int tmp=f[x];
+    f[x]=find(f[x]);
+    if(dfn[semi[mi[tmp]]]<dfn[semi[mi[x]]]) mi[x]=mi[tmp];
+    return f[x];
+}
+void dfs(int x,ll num)
+{
+    ans[x]=x+num;
+    for(int i=tr.h[x]; i; i=tr.ne[i]) dfs(tr.to[i],num+x);
+}
+void work()
+{
+    for(int i=n; i>=2; --i)
+    {
+        int x=repos[i],tmp=n;
+        for(int j=rg.h[x]; j; j=rg.ne[j])
+        {
+            if(!dfn[rg.to[j]]) continue;//此题数据有误
+            if(dfn[rg.to[j]]<dfn[x]) tmp=min(tmp,dfn[rg.to[j]]);
+            else find(rg.to[j]),tmp=min(tmp,dfn[semi[mi[rg.to[j]]]]);
+        }
+        semi[x]=repos[tmp],f[x]=fa[x],ng.add(semi[x],x);
+        x=repos[i-1];
+        for(int j=ng.h[x]; j; j=ng.ne[j])
+        {
+            int y=ng.to[j];
+            find(y);
+            if(semi[mi[y]]==semi[y]) idom[y]=semi[y];
+            else idom[y]=mi[y];//此时idom[mi[y]]可能并未找到
+        }
+    }
+    for(int i=2; i<=n; ++i)
+    {
+        int x=repos[i];
+        if(idom[x]!=semi[x]) idom[x]=idom[idom[x]];
+        tr.add(idom[x],x);
+    }
+    /*  for(int i=1;i<=n;i++)
+      cout<<"idom:"<<idom[i]<<endl;*/
+    dfs(n,0);//从n点出发
+}
+int main()
+{
+    int x,y;
+    while(~scanf("%d%d",&n,&m))
+    {
+        init();
+        for(int i=1; i<=m; ++i)
+            scanf("%d%d",&x,&y),g.add(x,y),rg.add(y,x);
+        tarjan(n);//从n点出发
+        work();
+        for(int i=1; i<n; ++i) printf("%d ",ans[i]);
+        printf("%d\n",ans[n]);
+    }
+    return 0;
+}
+/*2.洛谷p2597
+给定一个DAG，求如果删去一个点有多少个点会被影响（即灭绝）
+输入第一行是一个正整数 N，表示生物的种数。生物从 1 标号到 N。接下来 N 行，每行描述了一个生物可以吃的其他生物的列表，格式为用空格隔开的若干个数字，
+每个数字表示一种生物的标号，最后一个数字是 0 表示列表的结束。
+输出包含N行，每行一个整数，表示每个生物的灾难值。*/
+/*
+1、我们知道，一个生物死亡的条件是他的所有食物全部死亡，而且既然这个题说了没有环，那么就可以保证食物链等级鲜明，那么求这种图，我们很容易就可以想到
+拓扑排序了
+2、我们建一棵树，让father[x]为x的父亲，意味着若father[x]死了，那么x则灭绝，问题来了，x应该挂在哪个点上？当然是他所有食物的LCA上啊！
+若LCA死了，x的食物也会都死亡，那么x也必然死亡，建树这里可以将出度为0的点连在一个虚拟点n+1上方便处理 
+3、最后DFS求一下树的前缀和，因为若x死了，那么他的子树会全部死亡，那么他的重要度就是子树大小-1（去除本身） */
+#include<bits/stdc++.h>
+using namespace std;
+const int N=65540;
+int n,top,js;
+int f[N][16],du[N],p[N],st[N],ans[N],dep[N];
+vector<int> g[N],rg[N],tr[N];
+void topsort()
+{
+    for(int i=1; i<=n; ++i)
+        if(!du[i]) g[0].push_back(i),rg[i].push_back(0),++du[i];
+    top=1,st[top]=0;
+    while(top)
+    {
+        int x=st[top];
+        p[++js]=x,--top;
+        for(int i=0; i<g[x].size(); ++i)
+        {
+            --du[g[x][i]];
+            if(!du[g[x][i]]) st[++top]=g[x][i];
+        }
+    }
+}
+int lca(int x,int y)
+{
+    if(dep[x]<dep[y]) swap(x,y);
+    for(int i=15; i>=0; --i) if(dep[f[x][i]]>=dep[y]) x=f[x][i];
+    if(x==y) return x;
+    for(int i=15; i>=0; --i) if(f[x][i]!=f[y][i]) x=f[x][i],y=f[y][i];
+    return f[x][0];
+}
+void dfs(int x)
+{
+    ans[x]=1;
+    for(int i=0; i<tr[x].size(); ++i)
+        dfs(tr[x][i]),ans[x]+=ans[tr[x][i]];
+}
+int main()
+{
+    scanf("%d",&n);
+    for(int i=1; i<=n; ++i)
+    {
+        int x;
+        scanf("%d",&x);
+        while(x) g[x].push_back(i),rg[i].push_back(x),++du[i],scanf("%d",&x);
+    }
+    topsort();
+    for(int i=2; i<=n+1; ++i)
+    {
+        int x=p[i],y=rg[x][0];
+        for(int j=1; j<rg[x].size(); ++j) y=lca(y,rg[x][j]);
+        tr[y].push_back(x),dep[x]=dep[y]+1,f[x][0]=y;
+        for(int j=1; j<=15; ++j) f[x][j]=f[f[x][j-1]][j-1];
+    }
+    dfs(0);
+    for(int i=1; i<=n; ++i) printf("%d\n",ans[i]-1);
+    return 0;
+}
+
+/*3.给定一张有向图，求从1号点出发，每个点能支配的点的个数（包括自己）
+输入格式
+第一行两个正整数n,m，表示点数和边数 接下来m行，每行输入两个整数u,v，表示有一条u到v的有向边
+输出格式
+一行输出n个整数，表示每个点能支配的点的个数
+*/
+#include<bits/stdc++.h>
+using namespace std;
+#define RI register int
+int read() {
+	int q=0;char ch=' ';
+	while(ch<'0'||ch>'9') ch=getchar();
+	while(ch>='0'&&ch<='9') q=q*10+ch-'0',ch=getchar();
+	return q;
+}
+typedef long long LL;
+const int N=2e5+5,M=6e5+5;
+int n,m,tim;
+int dfn[N],repos[N],mi[N],fa[N],f[N],semi[N],idom[N],ans[N];
+struct graph{
+	int tot,h[N],ne[M],to[M];
+	void clear() {tot=0;for(RI i=0;i<=n;++i) h[i]=0;}//此题数据有误所以应从i=0开始清空
+	void add(int x,int y) {to[++tot]=y,ne[tot]=h[x],h[x]=tot;}
+}g,rg,ng,tr;
+
+void init() {
+	tim=0;g.clear(),rg.clear(),ng.clear(),tr.clear();
+	for(RI i=1;i<=n;++i)
+		repos[i]=dfn[i]=idom[i]=fa[i]=ans[i]=0,mi[i]=semi[i]=f[i]=i;
+}
+void tarjan(int x) {
+	dfn[x]=++tim,repos[tim]=x;
+	for(RI i=g.h[x];i;i=g.ne[i])
+		if(!dfn[g.to[i]]) fa[g.to[i]]=x,tarjan(g.to[i]);
+}
+int find(int x) {
+	if(x==f[x]) return x;
+	int tmp=f[x];f[x]=find(f[x]);
+	if(dfn[semi[mi[tmp]]]<dfn[semi[mi[x]]]) mi[x]=mi[tmp];
+	return f[x];
+}
+void dfs(int x,LL num) {
+  //  cout<<x<<endl;
+	ans[x]=1;
+	for(RI i=tr.h[x];i;i=tr.ne[i]) dfs(tr.to[i],num+x),ans[x]+=ans[tr.to[i]];
+}
+void work() {
+	for(RI i=n;i>=2;--i) {
+		int x=repos[i],tmp=n;
+		for(RI j=rg.h[x];j;j=rg.ne[j]) {
+			if(!dfn[rg.to[j]]) continue;//此题数据有误
+			if(dfn[rg.to[j]]<dfn[x]) tmp=min(tmp,dfn[rg.to[j]]);
+			else find(rg.to[j]),tmp=min(tmp,dfn[semi[mi[rg.to[j]]]]);
+		}
+		semi[x]=repos[tmp],f[x]=fa[x],ng.add(semi[x],x);
+
+		x=repos[i-1];
+		for(RI j=ng.h[x];j;j=ng.ne[j]) {
+			int y=ng.to[j];find(y);
+			if(semi[mi[y]]==semi[y]) idom[y]=semi[y];
+			else idom[y]=mi[y];//此时idom[mi[y]]可能并未找到
+		}
+	}
+	for(RI i=2;i<=n;++i) {
+		int x=repos[i];
+		if(idom[x]!=semi[x]) idom[x]=idom[idom[x]];
+		tr.add(idom[x],x);
+		//cout<<x<<" "<<idom[x]<<endl;
+	}
+	      /*  for(int i=1;i<=n;i++)
+            cout<<"idom:"<<idom[i]<<endl;*/
+	dfs(1,0);
+}
+int main()
+{
+	int x,y;
+	while(~scanf("%d%d",&n,&m)) {
+		init();
+		for(RI i=1;i<=m;++i)
+			x=read(),y=read(),g.add(x,y),rg.add(y,x);
+		tarjan(1);work();
+		for(RI i=1;i<n;++i) printf("%d ",ans[i]);
+		printf("%d\n",ans[n]);
+	}
+    return 0;
+}
