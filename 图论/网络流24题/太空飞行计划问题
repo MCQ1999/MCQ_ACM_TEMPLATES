@@ -28,7 +28,7 @@ W 教授正在为国家航天中心计划一系列的太空飞行。每次太空
 #include <queue>
 #include <vector>
 #define ll long long
-#define pb push\_back
+#define pb push_back
 #define MAXN 2000
 #define MAXM 800000
 #define INF 1073741823
@@ -168,3 +168,4 @@ int main()
     printf("%d",sum-yans);
     return 0;
 }
+
