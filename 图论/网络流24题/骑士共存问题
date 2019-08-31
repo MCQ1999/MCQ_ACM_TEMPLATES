@@ -1,0 +1,176 @@
+//二分图的最大独立集
+//求带障碍的 n×n 的国际象棋棋盘可以放多少个马，使得两两之间互相不能攻击。
+输入格式
+第一行有 2 个正整数n 和 m (1<=n<=200, 0<=m<n^2)，分别表示棋盘的大小和障碍数。接下来的 m 行给出障碍的位置。每行 2 个正整数，表示障碍的方格坐标。
+输出格式
+将计算出的共存骑士数输出*/
+/*
+先创一个源点和汇点
+让源点到所有O点（即横纵坐标加起来为奇数的点）连一条容量为1的边
+让所有X点（即横纵坐标加起来为偶数的点）到汇点连一条容量为1的边
+再对无法同时选择的O点和X点，让O点连一条到X点容量为inf的点
+当然，以上都是不考虑有障碍的点的
+最后跑最大流，设为最大流为x，输出n∗n−m−x就好了
+*/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<queue>
+#include<vector>
+#include<stack>
+#include<map>
+#include<deque>
+#define inf 0x7fffffff/2
+#define eps 1e-6
+#define N 100010
+#define M 3000010
+#define K 1010
+using namespace std;
+typedef long long ll;
+typedef unsigned long long ull;
+inline ll read()
+{
+    char ch=getchar();
+    ll s=0,w=1;
+    while(ch<'0'||ch>'9')
+    {
+        if(ch=='-')w=-1;
+        ch=getchar();
+    }
+    while(ch>='0'&&ch<='9')
+    {
+        s=s*10+ch-'0';
+        ch=getchar();
+    }
+    return s*w;
+}
+struct edge
+{
+    int next,to,fl;
+} e[M<<1];
+int n,m;
+int head[N],cnt=1;
+int depth[N];
+int x[8]= {1,1,-1,-1,2,2,-2,-2},y[8]= {2,-2,2,-2,1,-1,1,-1};
+//马可以往8个方向跑
+int flag[K][K];
+queue<int>Q;
+int s,t;
+inline void add_edge(int from,int to,int fl)
+{
+    e[++cnt].to=to;
+    e[cnt].next=head[from];
+    e[cnt].fl=fl;
+    head[from]=cnt;
+}//加边
+inline int arr(int x,int y)
+{
+    return (x-1)*n+y;
+}//坐标转换
+inline int bfs()
+{
+    memset(depth,0,sizeof(depth));
+    while(!Q.empty())Q.pop();
+    Q.push(s);
+    depth[s]=1;
+    while(!Q.empty())
+    {
+        int x=Q.front();
+        Q.pop();
+        for(register int i=head[x]; i; i=e[i].next)
+        {
+            if(e[i].fl>0&&!depth[e[i].to])
+            {
+                depth[e[i].to]=depth[x]+1;
+                Q.push(e[i].to);
+            }
+        }
+    }
+    return depth[t];
+}
+int dfs(int now,int flow)
+{
+    if(now==t)return flow;
+    int ret=0;
+    for(register int i=head[now]; i; i=e[i].next)
+    {
+        if(ret==flow)return flow;
+        if(depth[e[i].to]==depth[now]+1&&e[i].fl>0)
+        {
+            int fl=dfs(e[i].to,min(flow,e[i].fl));
+            if(fl>0)
+            {
+                ret+=fl;
+                e[i].fl-=fl;
+                e[i^1].fl+=fl;
+            }
+        }
+    }
+    if(!ret)depth[now]=0;
+    return ret;
+}
+inline int Dinic()
+{
+    int sum=0;
+    while(bfs())
+    {
+        int x=1;
+        while(x)
+        {
+            x=dfs(s,inf);
+            sum+=x;
+        }
+    }
+    return sum;
+}//最大流
+int main()
+{
+    n=read(),m=read();
+    t=n*n+1;//有n*m个点
+    for(register int i=1; i<=m; i++)
+    {
+        int x=read(),y=read();
+        flag[x][y]=1;
+    }
+    for(register int i=1; i<=n; i++)
+    {
+        for(register int j=1; j<=n; j++)
+        {
+            if((i+j)&1)
+            {
+                if(!flag[i][j])
+                {
+                    add_edge(s,arr(i,j),1),add_edge(arr(i,j),s,0);   //O点
+                }
+            }
+            else
+            {
+                if(!flag[i][j])
+                {
+                    add_edge(arr(i,j),t,1),add_edge(t,arr(i,j),0);   //X点
+                }
+            }
+        }
+    }
+    for(register int i=1; i<=n; i++)
+    {
+        for(register int j=1; j<=n; j++)
+        {
+            if(((i+j)&1)==0)continue;
+            for(register int k=0; k<8; k++)
+            {
+                int tox=i+x[k],toy=j+y[k];
+                if(tox>=1&&tox<=n&&toy>=1&&toy<=n&&!flag[tox][toy])
+                {
+                    add_edge(arr(i,j),arr(tox,toy),inf),add_edge(arr(tox,toy),arr(i,j),0);
+                    //对于不能同时选的点建inf边
+                }
+            }
+        }
+    }
+    int flow=Dinic();//求出最小割即最大流
+    printf("%d\n",n*n-m-flow);//输出
+    return 0;
+}
