@@ -1,0 +1,137 @@
+//有向无环图最小路径覆盖
+/*给一张DAG，求最少用几条不相交简单路径可以覆盖整张图的所有点。并求出方案
+输入输出格式
+输入格式：
+    第一行有 2个正整数n和m。n 是给定GAP(有向无环图)G的顶点数，m 是 G 的边数。接下来的 m 行,每行有两个正整数 i 和 j 表示一条有向边 (i,j).
+    1≤n≤150,1≤m≤6000
+输出格式：
+    从第1 行开始，每行输出一条路径。文件的最后一行是最少路径数。*/
+/*
+分析：
+我们首先将原图用n条路径覆盖，每条边只经过每个节点。
+现在尽量合并更多的路径(即将两个路径通过一条边首尾相连)。
+可以知道，每合并两条路径，图中的路径覆盖数就会减少1。
+所以我们只需要利用网络流合并相关的路径即可。
+答案求解：
+首先将每个节点拆成(Xi,Yi)两个节点，建立源点和汇点，分别连接(S,Xi)和(Yi,T)。
+然后对于每一条原图中的边，建立边(Xi,Yi)即可。
+这样每一条增广路都只会经过2个节点(Xa,Yb)，对应合并的两个节点。
+由于每个节点至多与一个节点合并，故边(S,Xi)和(Yi,T)容量为1。
+此时的最大流对应的就是最多可以合并的路径数。
+方案输出：
+根据网络流的残余流量构造每一条路径(利用并查集维护路径起点)，然后从起点递归输出。
+*/
+#include <iostream>
+#include <cstring>
+#include <cstdio>
+#define MX 20001
+#define S 0
+#define T ((n<<1)+1)
+#define oo 12312312
+using namespace std;
+typedef struct edge_t
+{
+    int u,v,c;
+} edge;
+edge e[MX];
+int fst[MX],nxt[MX],lnum;
+int n,m;
+void addeg(int nu,int nv,int nc)
+{
+    nxt[++lnum]=fst[nu];
+    fst[nu]=lnum;
+    e[lnum]=(edge)
+    {
+        nu,nv,nc
+    };
+}
+void input()
+{
+    int a,b;
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<=m; i++)
+    {
+        scanf("%d%d",&a,&b);
+        addeg(a,n+b,1);
+        addeg(n+b,a,0);
+    }
+    for(int i=1; i<=n; i++)addeg(S,i,1),addeg(i,S,0);
+    for(int i=n+1; i<=n<<1; i++)addeg(i,T,1),addeg(T,i,0);
+}
+void init()
+{
+    memset(fst,0xff,sizeof(fst));
+    lnum=-1;
+}
+int dep[MX],q[MX];
+int bfs(int frm,int to)
+{
+    int x,y,h=0,t=1;
+    memset(dep,0xff,sizeof(dep));
+    q[++h]=frm;
+    dep[frm]=0; 
+    while(h>=t)
+    {
+        x=q[t++];
+        for(int i=fst[x]; i!=-1; i=nxt[i])
+        {
+            y=e[i].v;
+            if(e[i].c&&dep[y]==-1)
+            {
+                dep[y]=dep[x]+1;
+                q[++h]=y;
+            }
+        }
+    }
+    return (dep[to]>=0);
+}
+int dinic(int to,int x,int mn)
+{
+    if(x==to)return mn;
+    int a,now=0,y;
+    for(int i=fst[x]; i!=-1; i=nxt[i])
+    {
+        y=e[i].v;
+        if(e[i].c&&dep[y]==dep[x]+1)
+        {
+            a=dinic(to,y,min(mn-now,e[i].c));
+            now+=a;
+            e[i].c-=a;
+            e[i^1].c+=a;
+            if(now==mn)break;
+        }
+    }
+    return now;
+}
+void output(int x)
+{
+    printf("%d ",x);
+    for(int i=fst[x]; i!=-1; i=nxt[i])
+        if(e[i].c==0&&e[i].v>n)
+            output(e[i].v-n);
+}
+int fa[MX];
+int findfa(int x)
+{
+    return x==fa[x]?x:fa[x]=findfa(fa[x]);
+}
+void work()
+{
+    int tot=0;
+    while(bfs(S,T))tot+=dinic(T,S,+oo);
+    for(int i=1; i<=n; i++)fa[i]=i;
+    for(int i=0; i<=lnum; i++)
+        if(e[i].u>=1&&e[i].u<=n&&e[i].v>n&&e[i].v<T&&e[i].c==0)
+            fa[findfa(e[i].v-n)]=findfa(e[i].u);
+    for(int i=1; i<=n; i++)
+        if(findfa(i)==i)
+            output(i),putchar('\n');
+    printf("%d\n",n-tot);
+}
+int main()
+{
+    init();
+    input();
+    work();
+    return 0;
+}
