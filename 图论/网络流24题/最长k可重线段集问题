@@ -1,0 +1,140 @@
+/*对于给定的开线段集合 I 和正整数 k，计算开线段集合 I 的最长 k 可重线段集的长度。
+输入格式
+文件的第一 行有 2 个正整数 n 和 k，分别表示开线段的个数和开线段的可重叠数。
+接下来的n 行，每行有 4 个整数，表示开线段的 2 个端点坐标。
+输出格式
+程序运行结束时，输出计算出的最长 k 可重线段集的长度。*/
+
+//本题就是将一条线段投影到x轴上去做最长k可重区间集。除了需要特判x0=x1，即线段垂直于x轴的情况外，代码几乎不用改。
+#include<cstdio>
+#include<cstring>
+#include<cmath>
+#include<queue>
+#include<algorithm>
+
+using namespace std;
+
+const int MAXN = 500 + 20;
+const int MAXE = MAXN * 400;
+const long long INF = 0x3f3f3f3f3f3f3f3f;
+
+struct Segment
+{
+    long long l, r, length;
+    Segment(long long l = 0, long long r = 0, long long length = 0) :
+        l(l), r(r), length(length) {};
+    bool operator < (const Segment &A) const
+    {
+        return l == A.l ? r < A.r : l < A.l;
+    }
+} I[MAXN];
+
+struct Edge
+{
+    int bg, ed, nxt, flow;
+    long long cost;
+    Edge(int bg = 0, int ed = 0, int nxt = 0, int flow = 0, long long cost = 0) :
+        bg(bg), ed(ed), nxt(nxt), flow(flow), cost(cost) {};
+};
+
+struct Map
+{
+    Edge edge[MAXE];
+    int head[MAXN << 1], count = 1;
+    inline void insert(int bg, int ed, int flow, long long cost)
+    {
+        edge[++count] = Edge(bg, ed, head[bg], flow, cost);
+        head[bg] = count;
+        edge[++count] = Edge(ed, bg, head[ed], 0, -cost);
+        head[ed] = count;
+    }
+} A;
+
+long long dis[MAXN << 1];
+int pre[MAXN << 1][3];//node edge flow
+bool vis[MAXN << 1];
+
+bool bfs(int s, int t)
+{
+    memset(dis, 0x3f, sizeof(dis));
+    memset(pre, 0, sizeof(pre));
+    memset(vis, false, sizeof(vis));
+    queue<int> que;
+    que.push(s);
+    dis[s] = 0;
+    pre[s][2] = 0x3f3f3f3f;
+    while (!que.empty())
+    {
+        int now = que.front();
+        que.pop();
+        vis[now] = false;
+        for (int i = A.head[now]; i; i = A.edge[i].nxt)
+        {
+            int v = A.edge[i].ed;
+            if (dis[v] > dis[now] + A.edge[i].cost && A.edge[i].flow)
+            {
+                dis[v] = dis[now] + A.edge[i].cost;
+                pre[v][0] = now;
+                pre[v][1] = i;
+                pre[v][2] = min(pre[now][2], A.edge[i].flow);
+                if (!vis[v])
+                {
+                    que.push(v);
+                    vis[v] = true;
+                }
+            }
+        }
+    }
+    return dis[t] != INF;
+}
+
+long long EK(int s, int t)
+{
+    long long ans = 0;
+    while (bfs(s, t))
+    {
+        int now = t, change = pre[t][2];
+        while (pre[now][0])
+        {
+            int e = pre[now][1];
+            A.edge[e].flow -= change;
+            A.edge[e ^ 1].flow += change;
+            now = pre[now][0];
+        }
+        ans += change * dis[t];
+    }
+    return ans;
+}
+
+int main()
+{
+    int n, k, s, S, T;
+    long long x0, y0, x1, y1;
+    scanf("%d%d", &n, &k);
+    s = n * 2 + 1;
+    S = s + 1;
+    T = S + 1;
+    for (int i = 1; i <= n; ++i)
+    {
+        scanf("%lld%lld%lld%lld", &x0, &y0, &x1, &y1);
+        I[i] = Segment(min(x0, x1), max(x0, x1), (long long)floor(sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1))));
+    }
+    sort(I + 1, I + n + 1);
+    A.insert(S, s, k, 0);
+    for (int i = 1; i <= n; ++i)
+    {
+        A.insert(i, i + n, 1, -I[i].length);
+        A.insert(s, i, 1, 0);
+        A.insert(i + n, T, 1, 0);
+        for (int j = i + 1; j <= n; ++j)
+        {
+            if (I[i].l == I[i].r && I[j].l == I[j].r && I[i].l == I[j].l) continue;//特判一下两条重合且垂直于x轴的线段
+            if (I[i].r <= I[j].l || I[i].l >= I[j].r)
+            {
+                A.insert(i + n, j, 1, 0);
+            }
+        }
+    }
+    printf("%lld\n", -EK(S, T));
+}
+
