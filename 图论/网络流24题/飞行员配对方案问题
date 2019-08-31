@@ -1,0 +1,114 @@
+/*二分图最大匹配+输出方案*/
+/*洛谷2756题目描述
+    英国皇家空军从沦陷国征募了大量外籍飞行员。由皇家空军派出的每一架飞机都需要配备在航行技能和语言上能互相配合的2 名飞行员，其中1 名是英国飞行员，
+    另1名是外籍飞行员。在众多的飞行员中，每一名外籍飞行员都可以与其他若干名英国飞行员很好地配合。如何选择配对飞行的飞行员才能使一次派出最多的飞机。
+    对于给定的外籍飞行员与英国飞行员的配合情况，试设计一个算法找出最佳飞行员配对方案，使皇家空军一次能派出最多的飞机。
+    对于给定的外籍飞行员与英国飞行员的配合情况，编程找出一个最佳飞行员配对方案，使皇家空军一次能派出最多的飞机。
+输入输出格式
+输入格式：
+    第 1 行有 2 个正整数 m 和 n。n 是皇家空军的飞行员总数(n<100)；m 是外籍飞行员数(m<=n)。外籍飞行员编号为 1~m；英国飞行员编号为 m+1~n。
+    接下来每行有 2 个正整数 i 和 j，表示外籍飞行员 i 可以和英国飞行员 j 配合。最后以 2个-1 结束。
+输出格式：
+    第 1 行是最佳飞行员配对方案一次能派出的最多的飞机数 M。接下来 M 行是最佳飞行员配对方案。每行有 2个正整数 i 和 j，表示在最佳飞行员配对方案中，
+    飞行员 i 和飞行员 j 配对。如果所求的最佳飞行员配对方案不存在，则输出‘No Solution!’。
+*/
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#define N 100010
+using namespace std;
+int n,m,S,T,tmp1,tmp2,tot;
+int en=1,head[N],h[N],q[N],ans1[N],ans2[N];
+struct Edge
+{
+    int to,next,v;
+} e[N];
+bool b[N];
+inline void insert(int u,int v,int f)
+{
+    e[++en].to=v;
+    e[en].v=f;
+    e[en].next=head[u];
+    head[u]=en;
+    e[++en].to=u;
+    e[en].v=0;
+    e[en].next=head[v];
+    head[v]=en;
+}
+inline bool bfs()
+{
+    int f=0,t=0;
+    memset(h,-1,sizeof(h));
+    q[t++]=S;
+    h[S]=0;
+    while(f<t)
+    {
+        int now=q[f++];
+        for(int i=head[now]; i; i=e[i].next)
+        {
+            int v=e[i].to;
+            if(h[v]==-1&&e[i].v)
+            {
+                h[v]=h[now]+1;
+                q[t++]=v;
+            }
+        }
+    }
+    if(h[T]!=-1)return 1;
+    return 0;
+}
+inline int dfs(int x,int f)
+{
+    if(x==T)return f;
+    int w,used=0;
+    for(int i=head[x]; i; i=e[i].next)
+    {
+        int v=e[i].to;
+        if(h[v]==h[x]+1&&e[i].v)
+        {
+            w=dfs(v,min(f-used,e[i].v));
+            e[i].v-=w;
+            e[i^1].v+=w;
+            used+=w;
+            if(used==f)return f;
+        }
+    }
+    if(!used)h[x]=-1;
+    return used;
+}
+void dinic()
+{
+    while(bfs())
+        tot+=dfs(S,0x3f3f3f3f);
+}
+int main()
+{
+    scanf("%d %d",&m,&n);
+    S=0,T=n+1;
+    scanf("%d %d",&tmp1,&tmp2);
+    do
+    {
+        insert(tmp1,tmp2,0x3f3f3f3f);
+        scanf("%d %d",&tmp1,&tmp2);
+    }
+    while(tmp1!=-1&&tmp2!=-1);
+    for(int i=1; i<=m; i++)insert(S,i,1);
+    for(int i=m+1; i<=n; i++)insert(i,T,1);
+    dinic();
+    if(tot==0)
+    {
+        puts("No Solution!");
+        return 0;
+    }
+    printf("%d\n",tot);
+    for(int i=2; i<=en; i=i+2)
+    {
+        if(e[i].to!=S&&e[i^1].to!=S)
+            if(e[i].to!=T&&e[i^1].to!=T)
+                if(e[i^1].v!=0)
+                {
+                    printf("%d %d\n",e[i^1].to,e[i].to);
+                }
+    }
+    return 0;
+}
