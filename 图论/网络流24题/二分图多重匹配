@@ -1,0 +1,121 @@
+//二分图多重匹配问题（一个点可以连多条边）
+/*题目描述
+    假设有来自m 个不同单位的代表参加一次国际会议。每个单位的代表数分别为ri (i =1,2,……,m)。
+    会议餐厅共有n 张餐桌，每张餐桌可容纳ci (i =1,2,……,n)个代表就餐。
+    为了使代表们充分交流，希望从同一个单位来的代表不在同一个餐桌就餐。试设计一个算法，给出满足要求的代表就餐方案。
+    对于给定的代表数和餐桌数以及餐桌容量，编程计算满足要求的代表就餐方案。
+输入输出格式
+输入格式：
+    第1 行有2 个正整数m 和n，m 表示单位数，n 表示餐桌数，1<=m<=150, 1<=n<=270。
+    第2 行有m 个正整数，分别表示每个单位的代表数。
+    第3 行有n 个正整数，分别表示每个餐桌的容量。
+输出格式：
+    如果问题有解，第1 行输出1，否则输出0。接下来的m 行给出每个单位代表的就餐桌号。如果有多个满足要求的方案，只要输出1 个方案。*/
+/*
+1.建一个超级源点，向每个单位连一条为单位人数的边
+2.每个单位向每个桌子连一条为1的边(同一个单位的人不能在同一个桌子上)
+3.建一个超级汇点，每个桌子向汇点连一条为桌子容量的边
+跑一遍最大流，如果最大流量等于所有单位人数之和，则存在解，否则无解。
+那么怎么输出路径呢？
+从每个单位出发的所有满流边指向的桌子就是该单位人员的安排情况
+*/
+#include<cstdio>
+#include<algorithm>
+#include<queue>
+#include<cstring>
+using namespace std;
+const int inf=1e9;
+int n,m,x,y,z,s,t,ans,d[10005],sum;
+struct node
+{
+    int next,to,w;
+} a[500000];
+int cnt=1,head[10005],cur[10005];
+int r[10000],c[10000],vis[10000];
+queue <int> q;
+void add(int x,int y,int dis)
+{
+    a[++cnt].next=head[x];
+    a[cnt].to=y;
+    a[cnt].w=dis;
+    head[x]=cnt;
+}
+bool bfs(int s,int t)
+{
+    memset(d,0x7f,sizeof(d));
+    while(!q.empty()) q.pop();
+    for(int i=0; i<=t; i++) cur[i]=head[i];
+    d[s]=0;
+    q.push(s);
+    while(!q.empty())
+    {
+        int u=q.front();
+        q.pop();
+        for(int i=head[u]; i; i=a[i].next)
+        {
+            int v=a[i].to;
+            if(d[v]>inf&&a[i].w)
+            {
+                d[v]=d[u]+1;
+                q.push(v);
+            }
+        }
+    }
+    if(d[t]<inf) return true;
+    else return false;
+}
+int dfs(int now,int t,int limit)
+{
+    if(!limit||now==t) return limit;
+    int flow=0,f;
+    for(int i=cur[now]; i; i=a[i].next)
+    {
+        cur[now]=i;
+        int v=a[i].to;
+        if(d[v]==d[now]+1&&(f=dfs(v,t,min(limit,a[i].w))))
+        {
+            flow+=f;
+            limit-=f;
+            a[i].w-=f;
+            a[i^1].w+=f;
+            if(!limit) break;
+        }
+    }
+    return flow;
+}
+int main()
+{
+    scanf("%d%d",&m,&n);
+    s=0;
+    t=n+m+1;
+    for(int i=1; i<=m; i++)
+    {
+        scanf("%d",&r[i]);
+        sum+=r[i];
+        add(0,i,r[i]); //建一个超级源点，向每个单位连一条为单位人数的边
+        add(i,0,0);
+    }
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%d",&c[i]);
+        add(i+m,t,c[i]); //建一个超级汇点，每个桌子向汇点连一条为桌子容量的边
+        add(t,i+m,0);
+    }
+    for(int i=1; i<=m; i++)
+        for(int j=1; j<=n; j++)
+            add(i,j+m,1),add(j+m,i,0); //每个单位向每个桌子连一条为1的边
+    while(bfs(s,t)) ans+=dfs(s,t,inf); //最大流模板不必多说了
+    if(ans==sum) //答案等于总人数才有解
+    {
+        printf("1\n");
+        for(int l=1; l<=m; ++l) //寻找方案
+        {
+            for(int i=head[l]; i; i=a[i].next)
+                if(a[i].to>m&&a[i].to<=m+n&&!a[i].w)
+                    printf("%d ",a[i].to-m);
+            printf("\n");
+        }
+    }
+    else printf("0\n");
+    return 0;
+}
