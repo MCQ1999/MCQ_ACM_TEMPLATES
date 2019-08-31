@@ -1,0 +1,191 @@
+/*给定一张航空图，图中顶点代表城市，边代表 2 城市间的直通航线。现要求找出一条满足下述限制条件的且途经城市最多的旅行路线。
+(1)从最西端城市出发，单向从西向东途经若干城市到达最东端城市，然后再单向从东向西飞回起点(可途经若干城市)。
+(2)除起点城市外，任何城市只能访问 1 次。
+对于给定的航空图，试设计一个算法找出一条满足要求的最佳航空旅行路线。
+输入格式
+第 1 行有 2 个正整数 N 和 V，N 表示城市数，N<100，V 表示直飞航线数。
+接下来的 N 行中每一行是一个城市名，可乘飞机访问这些城市。城市名出现的顺序是从西向东。也就是说，设 i,j 是城市表列中城市出现的顺序，当 i>j 时，表示城
+市 i 在城市 j 的东边，而且不会有 2 个城市在同一条经线上。城市名是一个长度不超过15 的字符串，串中的字符可以是字母或阿拉伯数字。例如，AGR34 或 BEL4。
+再接下来的 V 行中，每行有 2 个城市名，中间用空格隔开，如 city1 city2 表示 city1到 city2 有一条直通航线，从 city2 到 city1 也有一条直通航线。
+输出格式
+件第 1 行是旅行路线中所访问的城市总数 M。 接下来的 M＋1 行是旅行路线的城市名，每行写 1 个城市名。首先是出发城市名，然后按访问顺序列出其它城市名。 注意，
+最后 1 行（终点城市）的城市名必然是出发城市名。如果问题无解，则输出“No Solution!”。
+*/
+/*对于每个点拆成Ai和Bi两个点，两个点之间的容量为1，边权为1，（因为每个点只能选一次，每选一个点可以对答案造成1的贡献） （若i为1或n容量应为2，因为这两个
+点可以选两次）对于每条从u到v的边，让Bu向Av建一条容量为1，边权为0的边（因为每条边只能选一次，选边并不会对答案造成影响）最后从源点向A1建一条容量为2，边权为0,的边
+从Bn向汇点建一条容量为2，边权为0的边 跑最大费用最大流即可
+问题是如何输出城市呢？
+第一次dfs找到一条1到n所有边的flow都为0的路径正序输出，
+第二次dfs找到另一条1到n所有边的flow都为0的路径倒序输出（这次n不输出）*/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+#include<map>
+#define inf 0x7fffffff/2
+#define eps 1e-6
+#define N 100010
+using namespace std;
+typedef long long ll;
+typedef unsigned long long ull;
+inline ll read()
+{
+    char ch=getchar();
+    ll s=0,w=1;
+    while(ch<'0'||ch>'9')
+    {
+        if(ch=='-')w=-1;
+        ch=getchar();
+    }
+    while(ch>='0'&&ch<='9')
+    {
+        s=s*10+ch-'0';
+        ch=getchar();
+    }
+    return s*w;
+}
+int n,m;
+map<string,int>ma;
+struct edge
+{
+    int next,to,fl,v;
+} e[N<<1];
+int head[N],cnt=1;
+int dist[N],pre[N],vis[N],minn[N];
+queue<int>Q;
+int s,t,val,flag[N],check;
+string ss[N];
+inline void add_edge(int from,int to,int fl,int v)
+{
+    e[++cnt].to=to;
+    e[cnt].next=head[from];
+    e[cnt].fl=fl;
+    e[cnt].v=v;
+    head[from]=cnt;
+}
+void update(int x,int flow)
+{
+    e[pre[x]].fl-=flow;
+    e[pre[x]^1].fl+=flow;
+    if(e[pre[x]^1].to)update(e[pre[x]^1].to,flow);
+}
+inline int spfa()
+{
+    memset(vis,0,sizeof(vis));
+    while(!Q.empty())Q.pop();
+    for(register int i=1; i<=t; i++)dist[i]=-inf;
+    minn[s]=inf;
+    dist[s]=0;
+    Q.push(s);
+    vis[s]=1;
+    while(!Q.empty())
+    {
+        int x=Q.front();
+        Q.pop();
+        vis[x]=0;
+        for(register int i=head[x]; i; i=e[i].next)
+        {
+            if(dist[e[i].to]<dist[x]+e[i].v&&e[i].fl)
+            {
+                dist[e[i].to]=dist[x]+e[i].v;
+                pre[e[i].to]=i;
+                minn[e[i].to]=min(minn[x],e[i].fl);
+                if(!vis[e[i].to])
+                {
+                    vis[e[i].to]=1;
+                    Q.push(e[i].to);
+                }
+            }
+        }
+    }
+    if(dist[t]==-inf)return -inf;
+    update(t,minn[t]);
+    val+=minn[t];
+    return minn[t]*dist[t];
+}
+inline int EK()
+{
+    int sum=0;
+    while(1)
+    {
+        int x=spfa();
+        if(x==-inf)return sum;
+        sum+=x;
+    }
+}//最大费用最大流
+void dfs1(int x)
+{
+    cout<<ss[x]<<endl;//第一遍dfs正序输出
+    vis[x]=1;//不让第二次dfs再找到这个点
+    for(register int i=head[x]; i; i=e[i].next)
+    {
+        if(e[i].to>n&&e[i].to<=2*n&&e[i].fl==0)
+        {
+            dfs1(e[i].to-n);    //第一次dfs只找一条路径，找到就break
+            break;
+        }
+    }
+}
+void dfs2(int x)
+{
+    vis[x]=1;
+    for(register int i=head[x]; i; i=e[i].next)
+    {
+        if(e[i].to>n&&e[i].to<=2*n&&e[i].fl==0&&!vis[e[i].to-n])
+        {
+            dfs2(e[i].to-n);   //不走第一次路径走过的点
+        }
+    }
+    cout<<ss[x]<<endl;//第二次dfs倒序输出
+}//vis[n]在第一次dfs已经设为1，不会输出第二次
+int main()
+{
+    n=read(),m=read();
+    t=n*2+1;
+    for(register int i=1; i<=n; i++)
+    {
+        cin>>ss[i];
+        ma[ss[i]]=i;
+    }
+    for(register int i=1; i<=m; i++)
+    {
+        string s1,s2;
+        cin>>s1>>s2;
+        int x=ma[s1],y=ma[s2];
+        if(x>y)swap(x,y);//让西边的点向东边建边
+        if(x==1&&y==n)check=1;//如果有直接1-n的路径
+        add_edge(x,y+n,1,0);
+        add_edge(y+n,x,0,0);
+    }
+    add_edge(s,n+1,inf,0);
+    add_edge(n+1,s,0,0);
+    add_edge(n,t,inf,0);
+    add_edge(t,n,0,0);
+    for(register int i=1; i<=n; i++)
+    {
+        if(i!=1&&i!=n)add_edge(i+n,i,1,1),add_edge(i,i+n,0,-1);
+        else add_edge(i+n,i,2,1),add_edge(i,i+n,0,-1);
+    }
+    //对于我的代码,1-n是Bi,n+1-2*n是Ai
+    int maxflow=EK();
+    if(val==2)printf("%d\n",maxflow-2);//1和n被重复计算，应该减去
+    else if(val==1&&check)
+    {
+        printf("%d\n",2);    //如果有1-n直接的路径即使只有1条也是满足条件的
+        cout<<ss[1]<<endl<<ss[n]<<endl<<ss[1]<<endl;
+        return 0;
+    }
+    else
+    {
+        printf("No Solution!\n");
+        return 0;
+    }
+    memset(vis,0,sizeof(vis));
+    dfs1(1);
+    dfs2(1);//输出城市
+    return 0;
+}
+
