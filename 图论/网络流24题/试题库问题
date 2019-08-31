@@ -1,0 +1,148 @@
+//二分图多重匹配
+/*«问题描述：
+假设一个试题库中有n道试题。每道试题都标明了所属类别。同一道题可能有多个类别属性。现要从题库中抽取m 道题组成试卷。并要求试卷包含指定类型的试题。
+试设计一个满足要求的组卷算法。
+«编程任务：
+对于给定的组卷要求，计算满足要求的组卷方案。
+输入格式
+第1行有2个正整数k和n (2 <=k<= 20, k<=n<= 1000)
+k 表示题库中试题类型总数，n 表示题库中试题总数。第2 行有k 个正整数，第i 个正整数表示要选出的类型i的题数。这k个数相加就是要选出的总题数m。接下来的n行给出了题库中每个试题的类型信息。每行的第1 个正整数p表明该题可以属于p类，接着的p个数是该题所属的类型号。
+输出格式
+第i 行输出 “i：”后接类型i的题号。如果有多个满足要求的方案，只要输出1个方案。如果问题无解，则输出“No Solution!”。
+*/
+/*
+设超级源点为0，然后将所有试卷中的试 题类型与超级源点相连，流量设为试卷中这类题的数目。
+再将所有的题目与Ta们所属的类型连一条边，流量为1，再把这些题目与超级汇点（k+n+1）连起来. 然后跑一边最大流
+如果结果与m(试卷中要求的题目数量)不相同，就输出No solution！
+否则就循环所有的试题类型 如果这条边dis=0并且不连向0,就输出，但输出的时候要-k,因为建边的时候1~k是试题类型
+*/
+#include<cstring>
+#include<cstdio>
+#include<iostream>
+#include<algorithm>
+#include<queue>
+using namespace std;
+const int M = 1005 ;
+const int N = 25 ;
+const int inf = 210000000 ;
+inline int read()
+{
+    char c=getchar();
+    int x=0,w=1;
+    while(c>'9'||c<'0')
+    {
+        if(c=='-') w=-1;
+        c=getchar();
+    }
+    while(c>='0'&&c<='9')
+    {
+        x=x*10+c-'0';
+        c=getchar();
+    }
+    return x*w ;
+}
+struct E
+{
+    int nex,to,dis;
+} edge[M<<3];
+int hea[M<<3],num;
+inline void add_edge(int from,int to,int dis)
+{
+    edge[num].nex=hea[from];
+    edge[num].to=to;
+    edge[num].dis=dis;
+    hea[from]=num++;
+}
+int n,k,d[M<<3],f[N],m,s,t;
+bool bfs()
+{
+    queue<int>q;
+    q.push(s);
+    memset(d,0,sizeof(d));
+    d[s]=1;
+    while(!q.empty())
+    {
+        int u=q.front();
+        q.pop();
+        for(int i=hea[u]; ~i; i=edge[i].nex)
+        {
+            int v=edge[i].to;
+            if(!d[v]&&edge[i].dis>0)
+            {
+                q.push(v);
+                d[v]=d[u]+1;
+            }
+        }
+    }
+    return d[t] ;
+}
+int Dfs(int u,int dis)
+{
+    if(u==t||!dis) return dis;
+    int sum =0 ;
+    for(int i=hea[u]; ~i; i=edge[i].nex)
+    {
+        int v=edge[i].to;
+        if(d[v]==d[u]+1&&edge[i].dis>0)
+        {
+            int diss=Dfs(v,min(dis,edge[i].dis));
+            if(diss>0)
+            {
+                edge[i].dis-=diss;
+                edge[i^1].dis+=diss;
+                sum+=diss;
+                dis-=diss;
+                if(!dis) return sum;
+            }
+        }
+    }
+    return sum ;
+}
+int dinic()
+{
+    int Ans=0;
+    while(bfs()) Ans+=Dfs(s,inf);
+    return Ans;
+}
+int main()
+{
+    memset(hea,-1,sizeof(hea));
+    k=read();
+    n=read() ;
+    t=n+k+1 ;
+    for(int i=1; i<=k; i++)
+    {
+        f[i]=read();
+        m+=f[i];
+        add_edge(i,s,0);
+        add_edge(s,i,f[i]);
+    }
+    for(int i=1,p; i<=n; i++)
+    {
+        p=read();
+        for(int j=1,r; j<=p; j++)
+        {
+            r=read();
+            add_edge(i+k,r,0);
+            add_edge(r,i+k,1);
+        }
+    }
+    for(int i=1; i<=n; i++)
+    {
+        add_edge(t,i+k,0);
+        add_edge(i+k,t,1);
+    }
+    if(dinic()==m)
+    {
+        for(int i=1; i<=k; i++)
+        {
+            printf("%d: ",i);
+            for(int j=hea[i]; ~j; j=edge[j].nex)
+                if(edge[j].to>0&&!edge[j].dis)
+                    printf("%d ",edge[j].to-k);
+            printf("\n");
+        }
+    }
+    else printf("No Solution!\n");
+    return 0;
+}
