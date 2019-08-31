@@ -1,0 +1,111 @@
+//分层图最短路
+/*给定一个 N×N 的方形网格，设其左上角为起点，坐标(1,1)，X 轴向右为正， Y 轴向下为正，每个方格边长为 1
+一辆汽车从起点出发驶向右下角终点，其坐标为 (N,N)。
+在若干个网格交叉点处，设置了油库，可供汽车在行驶途中加油。汽车在行驶过程中应遵守如下规则:
+    汽车只能沿网格边行驶，装满油后能行驶 K 条网格边。出发时汽车已装满油，在起点与终点处不设油库。
+    汽车经过一条网格边时，若其 X 坐标或 Y 坐标减小，则应付费用 B ，否则免付费用。
+    汽车在行驶过程中遇油库则应加满油并付加油费用 A。
+    在需要时可在网格点处增设油库，并付增设油库费用 C(不含加油费用A )。
+    N,K,A,B,C均为正整数， 且满足约束: 2≤N≤100,2≤K≤10
+设计一个算法，求出汽车从起点出发到达终点所付的最小费用。
+输入格式
+文件的第一行是 N,K,A,B,C的值。
+第二行起是一个N×N的 0−1方阵,每行 N个值,至 N+1行结束。
+方阵的第 i 行第 j 列处的值为 1 表示在网格交叉点 (i,j) 处设置了一个油库,为 0 时表示未设油库。各行相邻两个数以空格分隔。
+输出格式
+程序运行结束时,输出最小费用。
+*/
+/*以汽车所剩油量为状态建k层图
+以下表示为(i(第几行），j（第几列），k（所剩油量））
+若该点建有油库，则将0---k-1层与（i,j,k)相连,边权为a
+若该点未建油库，则将0---k-1层与（i,j,k）相连,边权为a+c
+然后与它四周的四点相连
+最后跑一个spfa */
+#include <iostream>
+#include <cstdio>
+#include <queue>
+#define M 500050
+#define N 200050
+#define INF 0x7f7f7f7f
+using namespace std;
+int n,k,a,b,c,head[N],dis[N],answer=INF,maxn,num,dd,inq[N];
+struct node
+{
+    int next,to,dis;
+} tu[M*2];
+void addedge(int u,int v,int w)
+{
+    tu[++num]=(node)
+    {
+        head[u],v,w
+    };
+    head[u]=num;
+}
+void add(int c1,int x1,int y1,int c2,int x2,int y2,int w)
+{
+    addedge(c1*dd+(x1-1)*n+y1,c2*dd+(x2-1)*n+y2,w);
+}
+void spfa()
+{
+    queue<int> q;
+    for(int i=1; i<=n; i++)dis[i]=INF;
+    q.push(0);
+    inq[0]=1;
+    while(!q.empty())
+    {
+        int u=q.front();
+        q.pop();
+        inq[u]=0;
+        for(int i=head[u]; i; i=tu[i].next)
+        {
+            int v=tu[i].to,w=tu[i].dis;
+            if(dis[u]+w<dis[v])
+            {
+                dis[v]=dis[u]+w;
+                if(!inq[v])
+                {
+                    inq[v]=1;
+                    q.push(v);
+                }
+            }
+        }
+    }
+}
+int main()
+{
+    scanf("%d%d%d%d%d",&n,&k,&a,&b,&c);
+    dd=n*n;
+    int x;
+    for(int i=1; i<=n; i++)
+    {
+        for(int j=1; j<=n; j++)
+        {
+            scanf("%d",&x);
+            if(x==0)
+            {
+                for(int p=0; p<=k-1; p++)add(p,i,j,k,i,j,a+c);
+                for(int p=1; p<=k; p++)
+                {
+                    if(i-1>0)add(p,i,j,p-1,i-1,j,b);
+                    if(j-1>0)add(p,i,j,p-1,i,j-1,b);
+                    if(i+1<=n)add(p,i,j,p-1,i+1,j,0);
+                    if(j+1<=n)add(p,i,j,p-1,i,j+1,0);
+                }
+            }
+            else
+            {
+                for(int p=0; p<=k-1; p++)add(p,i,j,k,i,j,a);
+                if(i-1>0)add(k,i,j,k-1,i-1,j,b);
+                if(j-1>0)add(k,i,j,k-1,i,j-1,b);
+                if(i+1<=n)add(k,i,j,k-1,i+1,j,0);
+                if(j+1<=n)add(k,i,j,k-1,i,j+1,0);
+            }
+        }
+    }
+    addedge(0,k*dd+1,0);
+    n=dd*(k+1);
+    spfa();
+    for(int p=1; p<=k+1; p++)answer=min(answer,dis[p*dd]);
+    printf("%d",answer);
+    return 0;
+}
