@@ -1,0 +1,104 @@
+/*题目描述
+W 公司有 m 个仓库和 n 个零售商店。第 i 个仓库有 ai个单位的货物；第 j个零售商店需要 bj个单位的货物。
+货物供需平衡，即∑ai=∑bj
+从第 i 个仓库运送每单位货物到第 j 个零售商店的费用为 cij 。
+试设计一个将仓库中所有货物运送到零售商店的运输方案，使总运输费用最少。
+输入格式
+第 1 行有 2个正整数 m和 n，分别表示仓库数和零售商店数。
+接下来的一行中有 m个正整数 ai，表示第 i个仓库有 ai个单位的货物。
+再接下来的一行中有 n个正整数 bj，表示第 j 个零售商店需要 bj个单位的货物。
+接下来的 m 行，每行有 n 个整数，表示从第 i 个仓库运送每单位货物到第 j 个零售商店的费用 cij。
+输出格式
+两行分别输出最小运输费用和最大运输费用。*/
+
+/*由于每一个仓库只能流出定量的货物，但是又不能把每一个仓库看做源。
+所以把所有货物都连到同一个源上，连到第i个仓库的边嘚的容量为Ai，费用为0。
+每一家零售店又都连到一个汇上，从第i家零售店连出的边的容量为Bi，费用为0。
+中间从仓库到零售店的边就按照题目里的说的那样连，容量为+∞。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=210,maxm=20205,inf=0x3F3F3F3F;
+int m,n,S,T,tot,lnk[maxn],son[maxm],nxt[maxm],w[maxm],cap[maxm],que[maxn],lst[maxn],pre[maxn],dist[maxn],flow[maxn],ans;bool vis[maxn];
+inline int read()
+{
+    int ret=0,f=1;char ch=getchar();
+    while(ch<'0'||ch>'9'){if(ch=='-')f=-f;ch=getchar();}
+    while(ch>='0'&&ch<='9'){ret=ret*10+ch-'0';ch=getchar();}
+    return ret*f;
+}
+inline void add_e(int x,int y,int z,int c){tot++;son[tot]=y;w[tot]=z;cap[tot]=c;nxt[tot]=lnk[x];lnk[x]=tot;}
+inline void MinCostMaxFlow(int flg)
+{
+    while(true)
+    {
+        if(flg==1) memset(dist,63,sizeof(dist));
+        else memset(dist,192,sizeof(dist));
+        memset(flow,63,sizeof(flow));
+        int hed=0,til=1;
+        que[1]=S;dist[S]=0;vis[S]=true;pre[T]=0;
+        while(hed!=til)
+        {
+            hed=(hed+1)%maxn;vis[que[hed]]=false;
+            for(int i=lnk[que[hed]];i;i=nxt[i])
+            {
+                if(cap[i]&&((flg==1&&dist[que[hed]]+w[i]<dist[son[i]])||(flg==-1&&dist[que[hed]]+w[i]>dist[son[i]])))
+                {
+                    dist[son[i]]=dist[que[hed]]+w[i];
+                    pre[son[i]]=que[hed];
+                    lst[son[i]]=i;
+                    flow[son[i]]=min(flow[que[hed]],cap[i]);
+                    if(!vis[son[i]])
+                    {
+                        vis[son[i]]=true;
+                        til=(til+1)%maxn;
+                        que[til]=son[i];
+                    }
+                }
+            }
+        }
+        if(pre[T]==0) return;
+        ans+=flow[T]*dist[T];
+        int p=T;
+        while(p!=S)
+        {
+            cap[lst[p]]-=flow[T];
+            cap[(lst[p]&1)?lst[p]+1:lst[p]-1]+=flow[T];
+            p=pre[p];
+        }
+    }
+}
+int main()
+{
+    m=read();n=read();S=1;T=m+n+2;
+    for(int i=1;i<=m;i++)
+    {
+        int ai=read();
+        add_e(S,i+1,0,ai);
+        add_e(i+1,S,0,0);
+    }
+    for(int i=1;i<=n;i++)
+    {
+        int bi=read();
+        add_e(i+m+1,T,0,bi);
+        add_e(T,i+m+1,0,0);
+    }
+    for(int i=1;i<=m;i++)
+    {
+        for(int j=1;j<=n;j++)
+        {
+            int cij=read();
+            add_e(i+1,j+m+1,cij,inf);
+            add_e(j+m+1,i+1,-cij,0);
+        }
+    }
+    MinCostMaxFlow(1);
+    printf("%d\n",ans);
+    for(int i=2;i<=tot;i+=2){cap[i-1]+=cap[i];cap[i]=0;}
+    ans=0;
+    MinCostMaxFlow(-1);
+    printf("%d\n",ans);
+    return 0;
+}
