@@ -1,0 +1,170 @@
+//最大权闭合图转最大流
+/*题目描述
+W 教授正在为国家航天中心计划一系列的太空飞行。每次太空飞行可进行一系列商业性实验而获取利润。现已确定了一个可供选择的实验集合E={E1，E2，…，Em}，和
+进行这些实验需要使用的全部仪器的集合I={I1，I2，…In}。实验Ej需要用到的仪器是I的子集RjÍI。配置仪器Ik的费用为ck美元。实验Ej的赞助商已同意为该实验结果
+支付pj美元。W教授的任务是找出一个有效算法，确定在一次太空飞行中要进行哪些实验并因此而配置哪些仪器才能使太空飞行的净收益最大。这里净收益是指进行实验
+所获得的全部收入与配置仪器的全部费用的差额。
+对于给定的实验和仪器配置情况，编程找出净收益最大的试验计划。
+输入格式
+第1行有2 个正整数m和n。m是实验数，n是仪器数。接下来的m 行，每行是一个实验的有关数据。第一个数赞助商同意支付该实验的费用；接着是该实验需要用到的若干
+仪器的编号。最后一行的n个数是配置每个仪器的费用。n,m<=50。
+输出格式
+第1 行是实验编号；第2行是仪器编号；最后一行是净收益。*/
+
+/*这道题中，实验依赖于仪器，而实验和仪器都有权值，且仪器为负，实验为正。
+1.对于每个实验，连一条从s到实验，边权为实验利益的边。
+2.对于每个需要的仪器，连一条从实验到器材，边权为INF的边。
+3.对于每个仪器，连一条从器材到t，边权为器材耗费的边。
+按照上面建图，求最小割即最大流，然后用实验利益总和减去最大流即为最大净收益。
+关于求方案，由于n,m只有50，我们可以考虑枚举删除器材和t之间的边，如果删去后的最大流和原来的最大流的差值等于这条边的边权，那么这条边就是必须满流的，也就
+是这个器材是必要的。再根据需要的器材我们容易知道要做的实验有哪些。
+最大流用的是SAP多路增广加当前弧优化。
+*/
+//这道题数据是在windows生成的，输入数据中所有的换行都是'\r\n'而不是'\n'
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+#include <queue>
+#include <vector>
+#define ll long long
+#define pb push\_back
+#define MAXN 2000
+#define MAXM 800000
+#define INF 1073741823
+using namespace std;
+int n,m,tmp,s,t,sz=1,yans,sum,rem,num,ulen,cou;
+int val[MAXN],cost[MAXN],H[MAXN],gap[MAXN],cur[MAXN],pre[MAXM],to[MAXM],v[MAXM],las[MAXN],yv[MAXM];
+vector <int> req[MAXN];
+bool canuse1[MAXN],canuse2[MAXN];
+char c[10010];
+void ins(int x,int y,int z)
+{
+    sz++;
+    to[sz]=y;
+    v[sz]=z;
+    pre[sz]=las[x];
+    las[x]=sz;
+    sz++;
+    to[sz]=x;
+    v[sz]=0;
+    pre[sz]=las[y];
+    las[y]=sz;
+}
+void init()
+{
+    s=1,t=2+n+m;
+    for (int i=1; i<=n; i++)
+    {
+        ins(s,i+1,val[i]);
+        for (int j=0; j<req[i].size(); j++)
+            ins(i+1,1+n+req[i][j],INF);
+    }
+    for (int i=1; i<=m; i++)
+        ins(i+n+1,t,cost[i]);
+}
+void bfs()
+{
+    memset(gap,0,sizeof(gap));
+    memset(H,-1,sizeof(H));
+    H[t]=0,gap[0]=1;
+    queue<int> q;
+    q.push(t);
+    while (!q.empty())
+    {
+        tmp=q.front();
+        q.pop();
+        for (int i=las[tmp]; i; i=pre[i])
+            if (H[to[i]]==-1)
+            {
+                H[to[i]]=H[tmp]+1;
+                gap[H[to[i]]]++;
+                q.push(to[i]);
+            }
+    }
+}
+int dfs(int x,int F)
+{
+    if (x==t) return F;
+    int used=0,w;
+    for (int i=cur[x]; i; i=pre[i])
+        if (v[i]>0&&H[to[i]]+1==H[x])
+        {
+            w=min(v[i],F-used);
+            w=dfs(to[i],w);
+            v[i]-=w,v[i^1]+=w,used+=w;
+            if (v[i]>0) cur[x]=i;
+            if (F==used) return F;
+        }
+    gap[H[x]]--;
+    if (!gap[H[x]]) H[s]=t+2;
+    cur[x]=las[x];
+    gap[++H[x]]++;
+    return used;
+}
+int SAP()
+{
+    int ans=0;
+    for (int i=s; i<=t; i++)
+        cur[i]=las[i];
+    while (H[s]<t+2)
+        ans+=dfs(s,INF);
+    return ans;
+}
+int main()
+{
+    scanf("%d%d",&n,&m);
+    for (int i=1; i<=n; i++)
+    {
+        scanf("%d",&val[i]);
+        sum+=val[i];
+        memset(c,0,sizeof(c));
+        cin.getline(c,10000);
+        ulen=0;
+        while (sscanf(c+ulen,"%d",&num)==1) //由于数据是windows产生的
+        {
+            req[i].pb(num);
+            if (num==0) ulen++;
+            else while (num)
+                {
+                    num/=10;
+                    ulen++;
+                }
+            ulen++;
+        }
+    }
+    for (int i=1; i<=m; i++)
+        scanf("%d",&cost[i]);
+    init();
+    memcpy(yv,v,sizeof(v));
+    bfs();
+    yans=SAP();
+    for (int i=las[t]; i; i=pre[i])
+    {
+        memcpy(v,yv,sizeof(yv));
+        rem=v[i^1];
+        v[i^1]=0;
+        bfs();
+        tmp=SAP();
+        if (yans-tmp==rem) canuse1[to[i]-n-1]=true;
+        v[i^1]=rem;
+    }
+    for (int i=1; i<=n; i++)
+    {
+        canuse2[i]=true;
+        for (int j=0; j<req[i].size(); j++)
+            if (!canuse1[req[i][j]])
+            {
+                canuse2[i]=false;
+                break;
+            }
+    }
+    for (int i=1; i<=n; i++)
+        if (canuse2[i]) printf("%d ",i);
+    putchar('\n');
+    for (int i=1; i<=m; i++)
+        if (canuse1[i]) printf("%d ",i);
+    putchar('\n');
+    printf("%d",sum-yans);
+    return 0;
+}
