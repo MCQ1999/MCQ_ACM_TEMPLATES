@@ -1,0 +1,125 @@
+/*题目描述
+G 公司有 n 个沿铁路运输线环形排列的仓库，每个仓库存储的货物数量不等。如何用最少搬运量可以使 n 个仓库的库存数量相同。搬运货物时，只能在相邻的仓库之间搬运。
+输入格式
+文件的第 1 行中有 1 个正整数 n，表示有 n 个仓库。 1<=n<=100
+第 2 行中有 n 个正整数，表示 n 个仓库的库存量。
+输出格式
+输出最少搬运量。*/
+
+/*题目分析
+最终状态每一个仓库的流量一定是平均数.
+所以每一个大于平均数的仓库可以向外送东西,每一个小于平均数的仓库必须要从别的进东西.
+每次运输都是有代价的,而代价与运输的多少也有直接关系.
+自然就是最小费用最大流了.最大流保证了一定能平衡收支,最小费用保证在收支平衡的情况下花费最少了.
+模型建立
+首先先计算出他们的平均数,用每个数都减去平均数得到新的值,这个值如果是负数意味着需要从别的地方搞过一点来,如果正数就说明可以往外送一点.
+我们建立超级源点和超级汇点(这套路很常见的)
+如果权值为正,即储存量大于平均值,我们就从s向它连一条边,最大流为储存值-平均值,费用为0,图论意义就是它可以从源点免费获得多出来的储存值-平均值的流量,就相当于
+自身有储存值-平均值的流量,上面不是说了吗,建一个超级源点,就是代替这个功能.
+如果权值为负,即储存值小于平均值,我们就从它向t连一条边,最大流量为平均值-储存值,费用为0,图论意义就是它必须从别的节点传来流量,并且汇入自身,意义类比与上面
+所说.
+对于每一个可以互相传的节点,即左邻居和右邻居,需要分别向他们连边,表示自己的流可以流过去.*/
+#include<bits/stdc++.h>
+using namespace std;
+const int Mmax = 1910;
+const int Nmax = 210;
+const int inf = 20010509;
+int n,m,s,t,p1,p2,p3,to[Mmax<<1],net[Mmax<<1],mf[Mmax<<1],mo[Mmax<<1],tails=1,fr[Nmax];
+void add(int froms,int tos,int mfs,int money)
+{
+    to[++tails]=tos;
+    net[tails]=fr[froms];
+    mf[tails]=mfs;
+    mo[tails]=money;
+    fr[froms]=tails;
+}
+void auto_add(int st,int en,int mft,int mo)
+{
+    add(st,en,mft,mo),add(en,st,0,-mo);
+}
+int lastp[Nmax],useds[Nmax],flown[Nmax],dis[Nmax],ndo,p4;
+bool inqu[Nmax];
+queue<int>ready;
+bool SPFA()
+{
+    memset(inqu,0,sizeof(inqu));
+    memset(dis,20010509,sizeof(dis));
+    memset(flown,20010509,sizeof(flown));
+    while(!ready.empty())ready.pop();
+    ready.push(s);
+    dis[s]=0;
+    inqu[s]=1;
+    flown[s]=20010509;
+    lastp[t]=0;
+    while(!ready.empty())
+    {
+        ndo=ready.front();
+        ready.pop();
+        inqu[ndo]=0;
+        for(int lzh=fr[ndo]; lzh; lzh=net[lzh])
+        {
+            if(dis[to[lzh]]>dis[ndo]+mo[lzh] && mf[lzh])
+            {
+                dis[to[lzh]]=dis[ndo]+mo[lzh];
+                flown[to[lzh]]=min(mf[lzh],flown[ndo]);
+                useds[to[lzh]]=lzh;
+                lastp[to[lzh]]=ndo;
+                if(!inqu[to[lzh]])
+                {
+                    inqu[to[lzh]]=1;
+                    ready.push(to[lzh]);
+                }
+            }
+        }
+    }
+    return lastp[t]!=0;
+}
+int maxflow=0,mincost=0,ppo;
+void Dinic()
+{
+    while(SPFA())
+    {
+        maxflow+=flown[t];
+        ppo=t;
+        mincost+=flown[t]*dis[t];
+        while(ppo!=s)
+        {
+            mf[useds[ppo]]-=flown[t];
+            mf[useds[ppo]^1]+=flown[t];
+            ppo=lastp[ppo];
+        }
+    }
+}
+int x[Nmax],sum;
+int main()
+{
+    scanf("%d",&n);
+    for(int i=1; i<=n; ++i)
+    {
+        scanf("%d",&x[i]);
+        sum+=x[i];
+    }
+    sum/=n;
+    s=208;
+    t=209;
+    for(int i=1; i<=n; ++i)   x[i]-=sum;
+    for(int i=1; i<=n; ++i)
+    {
+        if(x[i]>0)
+            auto_add(s,i,x[i],0);
+        else if(x[i]<0)
+            auto_add(i,t,-x[i],0);
+    }
+    for(int i=1; i<=n; ++i)
+    {
+        if(i!=1)
+            auto_add(i,(i-1),inf,1);
+        if(i!=n)
+            auto_add(i,(i+1),inf,1);
+    }
+    auto_add(1,n,inf,1);
+    auto_add(n,1,inf,1);
+    Dinic();
+    printf("%d",mincost);
+    return 0;
+}
