@@ -1,0 +1,124 @@
+//洛谷p3806
+/*给定一棵有n个点的树
+询问树上距离为k的点对是否存在。
+输入格式
+n,m 接下来n-1条边a,b,c描述a到b有一条长度为c的路径
+接下来m行每行询问一个K
+输出格式
+对于每个K每行输出一个答案，存在输出“AYE”,否则输出”NAY”(不包含引号)*/
+#include<bits/stdc++.h>
+using namespace std;
+const int inf=10000000;
+const int N=100010;
+int n,m;
+struct node
+{
+    int v,dis,nxt;
+} E[N<<1];
+int tot,head[N];
+int maxp[N],size[N],dis[N],rem[N];
+int vis[N],test[inf],judge[inf],q[N];
+int query[1010];
+int sum,rt;
+int ans;
+
+void add(int u,int v,int dis)
+{
+    E[++tot].nxt=head[u];
+    E[tot].v=v;
+    E[tot].dis=dis;
+    head[u]=tot;
+}
+
+void getrt(int u,int pa)
+{
+    size[u]=1;
+    maxp[u]=0;
+    for(int i=head[u]; i; i=E[i].nxt)
+    {
+        int v=E[i].v;
+        if(v==pa||vis[v]) continue;
+        getrt(v,u);
+        size[u]+=size[v];
+        maxp[u]=max(maxp[u],size[v]);
+    }
+    maxp[u]=max(maxp[u],sum-size[u]);
+    if(maxp[u]<maxp[rt]) rt=u;
+}
+
+void getdis(int u,int fa)
+{
+    rem[++rem[0]]=dis[u];
+    for(int i=head[u]; i; i=E[i].nxt)
+    {
+        int v=E[i].v;
+        if(v==fa||vis[v])continue;
+        dis[v]=dis[u]+E[i].dis;
+        getdis(v,u);
+    }
+}
+
+void calc(int u)
+{
+    int p=0;
+    for(int i=head[u]; i; i=E[i].nxt)
+    {
+        int v=E[i].v;
+        if(vis[v])continue;
+        rem[0]=0;
+        dis[v]=E[i].dis;
+        getdis(v,u);//处理u的每个子树的dis
+
+        for(int j=rem[0]; j; --j) //遍历当前子树的dis
+            for(int k=1; k<=m; ++k) //遍历每个询问
+                if(query[k]>=rem[j])
+                    test[k]|=judge[query[k]-rem[j]];
+        //如果query[k]-rem[j]d的路径存在就标记第k个询问
+
+        for(int j=rem[0]; j; --j) //保存出现过的dis于judge
+            q[++p]=rem[j],judge[rem[j]]=1;
+    }
+    for(int i=1; i<=p; ++i) //处理完这个子树就清空judge
+        judge[q[i]]=0;//特别注意一定不要用memset，会T
+
+}
+
+void solve(int u)
+{
+    //judge[i]表示到根距离为i的路径是否存在
+    vis[u]=judge[0]=1;
+    calc(u);//处理以u为根的子树
+    for(int i=head[u]; i; i=E[i].nxt) //对每个子树进行分治
+    {
+        int v=E[i].v;
+        if(vis[v])continue;
+        sum=size[v];
+        maxp[rt=0]=inf;
+        getrt(v,0);
+        solve(rt);//在子树中找重心并递归处理
+    }
+}
+
+int main()
+{
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<n; ++i)
+    {
+        int u,v,dis;
+        scanf("%d%d%d",&u,&v,&dis);
+        add(u,v,dis);
+        add(v,u,dis);
+    }
+    for(int i=1; i<=m; ++i)
+        scanf("%d",&query[i]);//先记录每个询问以离线处理
+    maxp[rt]=sum=n;//第一次先找整棵树的重心
+    getrt(1,0);
+    solve(rt);//对树进行点分治
+    for(int i=1; i<=m; ++i)
+    {
+        if(test[i]) printf("AYE\n");
+        else printf("NAY\n");
+    }
+    return 0;
+}
+
