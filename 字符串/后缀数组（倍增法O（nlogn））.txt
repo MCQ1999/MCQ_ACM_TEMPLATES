@@ -80,7 +80,7 @@ void getHeight()
     }
 }
 /*
-两个后缀的最大公共前缀lcp(x,y)=min(heigh[x-y])， 用rmq维护，O(1)查询
+两个后缀的最大公共前缀lcp(x,y)=min(height[rank[x+1]~rank[y]])， 用rmq维护，O(1)查询
 可重叠最长重复子串:height数组里的最大值
 本质不同的子串的数量:枚举每一个后缀，第i个后缀对答案的贡献为len-sa[i]+1-height[i]
 */
