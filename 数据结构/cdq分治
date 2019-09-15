@@ -1,0 +1,94 @@
+/*洛谷p3810
+有n个元素，第i个元素有ai、bi、ci 三个属性，设 f(i)表示满足 aj≤ai且 bj≤bi且 cj≤ci的j的数量。
+对于 d∈[0,n)，求 f(i)=d的数量
+输入格式
+第一行两个整数 n，k，分别表示元素数量和最大属性值。
+之后 n行，每行三个整数 ai、bi、ci，分别表示三个属性值。
+输出格式
+输出 n行，第 d+1行表示f(i)=d 的 i的数量。*/
+#include<bits/stdc++.h>
+#define ll long long
+using namespace std;
+const int N=2e5+5;
+typedef struct node
+{
+    int x,y,z,ans,w;
+} node;
+node a[N],b[N];
+int n,cnt[N];
+int k,n_;
+bool cmpx(node u,node v)
+{
+    if(u.x==v.x)
+    {
+        if(u.y==v.y)
+            return u.z<v.z;
+        return u.y<v.y;
+    }
+    return u.x<v.x;
+}
+bool cmpy(node u,node v)
+{
+    if(u.y==v.y)
+        return u.z<v.z;
+    return u.y<v.y;
+}
+struct bit
+{
+    int tre[N],kk;
+    int lowbit(int x)
+    {
+        return x&(-x);
+    }
+    int ask(int i)
+    {
+        int ans=0;
+        for(; i; i-=lowbit(i))ans+=tre[i];
+        return ans;
+    }
+    void add(int i,int k)
+    {
+        for(; i<=kk; i+=lowbit(i))tre[i]+=k;
+    }
+} t;
+void cdq(int l,int r)
+{
+    if(l==r)return;
+    int mid=(l+r)>>1;
+    cdq(l,mid);
+    cdq(mid+1,r);
+    sort(a+l,a+mid+1,cmpy);
+    sort(a+mid+1,a+r+1,cmpy);
+    int i=mid+1,j=l;
+    for(; i<=r; i++)
+    {
+        while(a[j].y<=a[i].y && j<=mid)
+            t.add(a[j].z,a[j].w),j++;
+        a[i].ans+=t.ask(a[i].z);
+    }
+    for(i=l; i<j; i++)
+        t.add(a[i].z,-a[i].w);
+}
+int main()
+{
+    scanf("%d%d",&n_,&k);
+    t.kk=k;
+    for(int i=1; i<=n_; i++)
+        scanf("%d%d%d",&b[i].x,&b[i].y,&b[i].z);
+    sort(b+1,b+n_+1,cmpx);
+    int c=0;
+    for(int i=1; i<=n_; i++)
+    {
+        c++;
+        if(b[i].x!=b[i+1].x || b[i].y!=b[i+1].y || b[i].z!=b[i+1].z )
+            a[++n]=b[i],a[n].w=c,c=0;
+    }
+    cdq(1,n);
+    for(int i=1; i<=n; i++)
+        cnt[a[i].ans+a[i].w-1]+=a[i].w;
+    for(int i=0; i<n_; i++)
+        printf("%d\n",cnt[i]);
+    return 0;
+}
+
+
