@@ -7,16 +7,6 @@ N（n<=40000） 接下来n-1行边描述管道，按照题目中写的输入 接
 #include<bits/stdc++.h>
 #define ll long long
 using namespace std;
-inline int read()
-{
-    int x=0;
-    char ch=' ';
-    int f=1;
-    while(ch!='-'&&(ch<'0'||ch>'9'))ch=getchar();
-    if(ch=='-')f=-1,ch=getchar();
-    while(ch>='0'&&ch<='9')x=x*10+ch-'0',ch=getchar();
-    return x*f;
-}
 struct edge
 {
     int to,next,w;
@@ -96,18 +86,22 @@ void dfs(int x)
 }
 int main()
 {
-    n=read();
-    for(int i=1; i<n; i++)
+    while(~scanf("%d",&n))
     {
-        int x=read(),y=read(),l=read();
-        addedge(x,y,l);
-        addedge(y,x,l);
+        for(int i=1; i<n; i++)
+        {
+            int x,y,l;
+            scanf("%d%d%d",&x,&y,&l);
+            addedge(x,y,l);
+            addedge(y,x,l);
+        }
+        scanf("%d",&k);
+        sz=n;
+        mx=0x3f3f3f3f;
+        getroot(1,0);
+        dfs(root);
+        printf("%lld",ans);
     }
-    k=read();
-    sz=n;
-    mx=0x3f3f3f3f;
-    getroot(1,0);
-    dfs(root);
-    printf("%lld",ans);
+
     return 0;
 }
