@@ -1,0 +1,180 @@
+/* HDU4578
+  对于一个区间有4个操作：
+	1.将a~b都加上c
+	2.将a~b都乘上c
+	3.将a~b都变成c
+	4.查询a~b的每个数的p次方的和。（p=1,2,3）*/
+#include <iostream>
+#include <cstdio>
+#include <vector>
+#include <cmath>
+#include <string>
+#include <string.h>
+#include <algorithm>
+using namespace std;
+#define LL __int64
+#define eps 1e-8
+#define INF INT_MAX
+#define lson l , m , rt << 1
+#define rson m + 1 , r , rt << 1 | 1
+const int MOD = 10007;
+const int maxn = 100000 + 5;
+const int N = 12;
+LL add[maxn << 2], set[maxn << 2], mul[maxn << 2];
+LL sum1[maxn << 2], sum2[maxn << 2], sum3[maxn << 2];
+void PushUp(int rt)
+{
+    sum1[rt] = (sum1[rt << 1] + sum1[rt << 1 | 1]) % MOD;
+    sum2[rt] = (sum2[rt << 1] + sum2[rt << 1 | 1]) % MOD;
+    sum3[rt] = (sum3[rt << 1] + sum3[rt << 1 | 1]) % MOD;
+}
+void build(int l, int r, int rt)
+{
+    add[rt] = set[rt] = 0;
+    mul[rt] = 1;
+    if(l == r)
+    {
+        sum1[rt] = sum2[rt] = sum3[rt] = 0;
+        return;
+    }
+    int m = (l + r) >> 1;
+    build(lson);
+    build(rson);
+    PushUp(rt);
+}
+void PushDown(int rt, int len)
+{
+    if(set[rt])
+    {
+        set[rt << 1] = set[rt << 1 | 1] = set[rt];
+        add[rt << 1] = add[rt << 1 | 1] = 0;    //注意这个也要下放
+        mul[rt << 1] = mul[rt << 1 | 1] = 1;
+        LL tmp = ((set[rt] * set[rt]) % MOD) * set[rt] % MOD;
+        sum1[rt << 1] = ((len - (len >> 1)) % MOD) * (set[rt] % MOD) % MOD;
+        sum1[rt << 1 | 1] = ((len >> 1) % MOD) * (set[rt] % MOD) % MOD;
+        sum2[rt << 1] = ((len - (len >> 1)) % MOD) * ((set[rt] * set[rt]) % MOD) % MOD;
+        sum2[rt << 1 | 1] = ((len >> 1) % MOD) * ((set[rt] * set[rt]) % MOD) % MOD;
+        sum3[rt << 1] = ((len - (len >> 1)) % MOD) * tmp % MOD;
+        sum3[rt << 1 | 1] = ((len >> 1) % MOD) * tmp % MOD;
+        set[rt] = 0;
+    }
+    if(mul[rt] != 1)      //这个就是mul[rt] != 1 ， 当时我这里没注意所以TLE了
+    {
+        mul[rt << 1] = (mul[rt << 1] * mul[rt]) % MOD;
+        mul[rt << 1 | 1] = (mul[rt << 1 | 1] * mul[rt]) % MOD;
+        if(add[rt << 1])    //注意这个也要下放
+            add[rt << 1] = (add[rt << 1] * mul[rt]) % MOD;
+        if(add[rt << 1 | 1])
+            add[rt << 1 | 1] = (add[rt << 1 | 1] * mul[rt]) % MOD;
+        LL tmp = (((mul[rt] * mul[rt]) % MOD * mul[rt]) % MOD);
+        sum1[rt << 1] = (sum1[rt << 1] * mul[rt]) % MOD;
+        sum1[rt << 1 | 1] = (sum1[rt << 1 | 1] * mul[rt]) % MOD;
+        sum2[rt << 1] = (sum2[rt << 1] % MOD) * ((mul[rt] * mul[rt]) % MOD) % MOD;
+        sum2[rt << 1 | 1] = (sum2[rt << 1 | 1] % MOD) * ((mul[rt] * mul[rt]) % MOD) % MOD;
+        sum3[rt << 1] = (sum3[rt << 1] % MOD) * tmp % MOD;
+        sum3[rt << 1 | 1] = (sum3[rt << 1 | 1] % MOD) * tmp % MOD;
+        mul[rt] = 1;
+    }
+    if(add[rt])
+    {
+        add[rt << 1] += add[rt];    //add是+= ， mul是*=
+        add[rt << 1 | 1] += add[rt];
+        LL tmp = (add[rt] * add[rt] % MOD) * add[rt] % MOD;        //注意sum3 , sum2 , sum1的先后顺序
+        sum3[rt << 1] = (sum3[rt << 1] + (tmp * (len - (len >> 1)) % MOD) + 3 * add[rt] * ((sum2[rt << 1] + sum1[rt << 1] * add[rt]) % MOD)) % MOD;
+        sum3[rt << 1 | 1] = (sum3[rt << 1 | 1] + (tmp * (len >> 1) % MOD) + 3 * add[rt] * ((sum2[rt << 1 | 1] + sum1[rt << 1 | 1] * add[rt]) % MOD)) % MOD;
+        sum2[rt << 1] = (sum2[rt << 1] + ((add[rt] * add[rt] % MOD) * (len - (len >> 1)) % MOD) + (2 * sum1[rt << 1] * add[rt] % MOD)) % MOD;
+        sum2[rt << 1 | 1] = (sum2[rt << 1 | 1] + (((add[rt] * add[rt] % MOD) * (len >> 1)) % MOD) + (2 * sum1[rt << 1 | 1] * add[rt] % MOD)) % MOD;
+        sum1[rt << 1] = (sum1[rt << 1] + (len - (len >> 1)) * add[rt]) % MOD;
+        sum1[rt << 1 | 1] = (sum1[rt << 1 | 1] + (len >> 1) * add[rt]) % MOD;
+        add[rt] = 0;
+    }
+}
+void update(int L, int R, int c, int ch, int l, int r, int rt)
+{
+    if(L <= l && R >= r)
+    {
+        if(ch == 3)
+        {
+            set[rt] = c;
+            add[rt] = 0;
+            mul[rt] = 1;
+            sum1[rt] = ((r - l + 1) * c) % MOD;
+            sum2[rt] = ((r - l + 1) * ((c * c) % MOD)) % MOD;
+            sum3[rt] = ((r - l + 1) * (((c * c) % MOD) * c % MOD)) % MOD;
+        }
+        else if(ch == 2)
+        {
+            mul[rt] = (mul[rt] * c) % MOD;
+            if(add[rt])
+                add[rt] = (add[rt] * c) % MOD;
+            sum1[rt] = (sum1[rt] * c) % MOD;
+            sum2[rt] = (sum2[rt] * (c * c % MOD)) % MOD;
+            sum3[rt] = (sum3[rt] * ((c * c % MOD) * c % MOD)) % MOD;
+        }
+        else if(ch == 1)
+        {
+            add[rt] += c;
+            LL tmp = (((c * c) % MOD * c) % MOD * (r - l + 1)) % MOD;    //(r - l + 1) * c^3
+            sum3[rt] = (sum3[rt] + tmp + 3 * c * ((sum2[rt] + sum1[rt] * c) % MOD)) % MOD;
+            sum2[rt] = (sum2[rt] + (c * c % MOD * (r - l + 1) % MOD) + 2 * sum1[rt] * c) % MOD;
+            sum1[rt] = (sum1[rt] + (r - l + 1) * c) % MOD;
+        }
+        return;
+    }
+    PushDown(rt, r - l + 1);
+    int m = (l + r) >> 1;
+    if(L > m)
+        update(L, R, c, ch, rson);
+    else if(R <= m)
+        update(L, R, c, ch, lson);
+    else
+    {
+        update(L, R, c, ch, lson);
+        update(L, R, c, ch, rson);
+    }
+    PushUp(rt);
+}
+LL query(int L, int R, int p, int l, int r, int rt)
+{
+    if(L <= l && R >= r)
+    {
+        if(p == 1)
+            return sum1[rt] % MOD;
+        else if(p == 2)
+            return sum2[rt] % MOD;
+        else
+            return sum3[rt] % MOD;
+    }
+    PushDown(rt, r - l + 1);
+    int m = (l + r) >> 1;
+    if(L > m)
+        return query(L, R, p, rson);
+    else if(R <= m)
+        return query(L, R, p, lson);
+    else
+        return (query(L, R, p, lson) + query(L, R, p, rson)) % MOD;
+}
+int main()
+{
+    int n, m;
+    int a, b, c, ch;
+    while(~scanf("%d %d", &n, &m))
+    {
+        if(n == 0 && m == 0)
+            break;
+        build(1, n, 1);
+        while(m--)
+        {
+            scanf("%d %d %d %d", &ch, &a, &b, &c);
+            if(ch != 4)
+            {
+                update(a, b, c, ch, 1, n, 1);
+            }
+            else
+            {
+                printf("%I64d\n", query(a, b, c, 1, n, 1));
+            }
+        }
+    }
+    return 0;
+}
