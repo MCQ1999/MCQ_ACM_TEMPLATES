@@ -11,6 +11,7 @@ inline int lowbit(int x)
     return x&-x;
 }
 void add(int x,int value)
+{
     for(int i=x; i<=N; i+=lowbit(i))
     {
         a[i]+=value;
