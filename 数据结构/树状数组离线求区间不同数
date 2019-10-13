@@ -1,3 +1,81 @@
+1.求l~r
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int N=1e6+5;
+const double eps=1e-8;
+int a[N],b[N];
+inline int lowbit(int x)
+{
+    return x&-x;
+}
+void add(int x,int value)
+    for(int i=x; i<=N; i+=lowbit(i))
+    {
+        a[i]+=value;
+    }
+}
+int get(int x)
+{
+    int sum=0;
+    for(int i=x; i; i-=lowbit(i))
+    {
+        sum+=a[i];
+    }
+    return sum;
+}
+struct node
+{
+    int l,r,id;
+    bool operator<(node b)
+    {
+        return r<b.r;
+    }
+};
+node g[N];
+int lst[N],ans[N];
+int main()
+{
+    int n,d;
+    scanf("%d",&n);
+    memset(a,0,sizeof(a));
+    memset(lst,0,sizeof(lst));
+    for(int i=1; i<=n; i++)
+    {
+        cin>>b[i];
+    }
+    int q;
+    scanf("%d",&q);
+    for(int i=1; i<=q; i++)
+    {
+        scanf("%d%d",&g[i].l,&g[i].r);
+        g[i].id=i;
+    }
+    sort(g+1,g+1+q);
+    int nxt=1;
+    for(int i=1; i<=q; i++)
+    {
+        for(int j=nxt; j<=g[i].r; j++)
+        {
+            if(lst[b[j]])
+            {
+                add(lst[b[j]],-1);
+            }
+            add(j,1);
+            lst[b[j]]=j;
+        }
+        nxt=g[i].r+1;
+        ans[g[i].id]=get(g[i].r)-get(g[i].l-1);
+    }
+    for(int i=1;i<=q;i++)
+    {
+        printf("%d\n",ans[i]);
+    }
+    return 0;
+}
+
+2.求1~l,r~n
 #include<bits/stdc++.h>
 using namespace std;
 #define inf 0x3f3f3f3f
