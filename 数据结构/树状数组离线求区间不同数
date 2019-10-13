@@ -12,7 +12,7 @@ inline int lowbit(int x)
 }
 void add(int x,int value)
 {
-    for(int i=x; i<=N; i+=lowbit(i))
+    for(int i=x; i<N; i+=lowbit(i))
     {
         a[i]+=value;
     }
@@ -90,7 +90,7 @@ inline int lowbit(int x)
 }
 void add(int x,int value) //输入数据时，需要调用此函数加到a[]里面
 {
-    for(int i=x; i<=N; i+=lowbit(i))
+    for(int i=x; i<N; i+=lowbit(i))
     {
         a[i]+=value;
     }
