@@ -1,0 +1,104 @@
+1.
+一棵树有n个结点，每个结点都是一种颜色，每个颜色有一个编号，求树中每个子树的最多的颜色编号的和。
+比如子树中有3个2,3个1，3个5，那么2,1,5都是众数，答案为2+1+5=8
+#include<bits/stdc++.h>
+using namespace std;
+#define il inline
+using namespace std;
+typedef long long ll;
+const int N=1e5+5;
+ll col[N];
+int n;
+int ls[N*40],rs[N*40],cnt,rt[N];
+ll sum[N*40],ans[N*40];
+vector<int>g[N];
+ll out[N];
+
+il void pushup(int now)
+{
+    if(sum[ls[now]]==sum[rs[now]])
+    {
+        sum[now]=sum[ls[now]];
+        ans[now]=ans[ls[now]]+ans[rs[now]];
+    }
+    else if(sum[ls[now]]<sum[rs[now]])
+    {
+        sum[now]=sum[rs[now]];
+        ans[now]=ans[rs[now]];
+    }
+    else
+    {
+        sum[now]=sum[ls[now]];
+        ans[now]=ans[ls[now]];
+    }
+}
+
+il void modify(int &now,int l,int r,int pos)
+{
+    if(!now)now=++cnt;
+    if(l==r)
+    {
+        sum[now]++;
+        ans[now]=l;
+        return;
+    }
+    int mid=(l+r)>>1;
+    if(pos<=mid)modify(ls[now],l,mid,pos);
+    else modify(rs[now],mid+1,r,pos);
+    pushup(now);
+}
+
+il int merge(int x,int y,int l,int r)
+{
+    if(!x||!y)return x+y;
+    if(l==r)
+    {
+        sum[x]+=sum[y];
+        ans[x]=l;
+        return x;
+    }
+    int mid=(l+r)>>1;
+    ls[x]=merge(ls[x],ls[y],l,mid);
+    rs[x]=merge(rs[x],rs[y],mid+1,r);
+    pushup(x);
+    return x;
+}
+
+il void dfs(int u,int fa)
+{
+    for(int i=0; i<g[u].size(); i++)
+    {
+        int v=g[u][i];
+        if(v==fa)continue;
+        dfs(v,u);
+        merge(rt[u],rt[v],1,100000);
+    }
+    modify(rt[u],1,100000,col[u]);
+    out[u]=ans[rt[u]];
+}
+
+int main()
+{
+    ios::sync_with_stdio(false);
+    cin>>n;
+    for(int i=1; i<=n; i++)
+    {
+        cin>>col[i];
+        rt[i]=i;
+        cnt++;
+    }
+    for(int i=1; i<n; i++)
+    {
+        int x,y;
+        cin>>x>>y;
+        g[x].push_back(y);
+        g[y].push_back(x);
+    }
+    dfs(1,0);
+    for(int i=1; i<=n; i++)
+    {
+        cout<<out[i]<<" ";
+    }
+}
+
+2.
