@@ -1,4 +1,4 @@
-1.
+1.CF600E
 一棵树有n个结点，每个结点都是一种颜色，每个颜色有一个编号，求树中每个子树的最多的颜色编号的和。
 比如子树中有3个2,3个1，3个5，那么2,1,5都是众数，答案为2+1+5=8
 #include<bits/stdc++.h>
@@ -101,4 +101,105 @@ int main()
     }
 }
 
-2.
+2.洛谷P3605 树上逆序对个数
+给出一颗树，每个点都有一个权值，最后对于每个点，输出在它的子树中，有多少个点的权值比它大。
+#include<bits/stdc++.h>
+using namespace std;
+#define il inline
+using namespace std;
+typedef long long ll;
+const int N=1e5+5;
+ll col[N];
+int n;
+int ls[N*40],rs[N*40],cnt,rt[N],a[N];
+ll sum[N*40],ans[N*40];
+vector<int>g[N];
+ll out[N];
+
+il void pushup(int now)
+{
+    sum[now]=sum[ls[now]]+sum[rs[now]];
+}
+
+il void modify(int &now,int l,int r,int pos)
+{
+    if(!now)now=++cnt;
+    if(l==r)
+    {
+        sum[now]++;
+        return;
+    }
+    int mid=(l+r)>>1;
+    if(pos<=mid)modify(ls[now],l,mid,pos);
+    else modify(rs[now],mid+1,r,pos);
+    pushup(now);
+}
+
+il int merge(int x,int y,int l,int r)
+{
+    if(!x||!y)return x+y;
+    int mid=(l+r)>>1;
+    ls[x]=merge(ls[x],ls[y],l,mid);
+    rs[x]=merge(rs[x],rs[y],mid+1,r);
+    pushup(x);
+    return x;
+}
+
+il int query(int now,int l,int r,int k)
+{
+    if(!now) return 0;
+    if(l>=k) return sum[now];
+    int mid=(l+r)>>1;
+    int res=0;
+    if(mid>=k)
+        res+=query(ls[now],l,mid,k);
+    res+=query(rs[now],mid+1,r,k);
+    return res;
+}
+il void dfs(int u,int fa)
+{
+    int sz=g[u].size();
+    for(int i=0; i<sz; i++)
+    {
+        int v=g[u][i];
+        if(v==fa)   continue;
+        dfs(v,u);
+        merge(rt[u],rt[v],1,100000);
+    }
+    modify(rt[u],1,100000,col[u]);
+   // cout<<"g: "<<u<<" "<<fa<<endl;
+    out[u]=query(rt[u],1,100000,col[u]+1);
+}
+
+int main()
+{
+    ios::sync_with_stdio(false);
+    cin>>n;
+    for(int i=1; i<=n; i++)
+    {
+        cin>>a[i];
+        col[i]=a[i];
+        rt[i]=i;
+        cnt++;
+    }
+    sort(a+1,a+n+1);
+    int sz=unique(a+1,a+n+1)-a-1;
+    for(int i=1;i<=n;i++)
+    {
+        col[i]=lower_bound(a+1,a+sz+1,col[i])-a;
+    }
+    for(int i=2; i<=n; i++)
+    {
+        int x;
+        cin>>x;
+        g[i].push_back(x);
+        g[x].push_back(i);
+    }
+    dfs(1,0);
+    for(int i=1; i<=n; i++)
+    {
+        cout<<out[i]<<endl;
+    }
+}
+
+3.
