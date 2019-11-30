@@ -1,0 +1,55 @@
+//1. 1~n的因子个数和
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int N=200005;
+const int mod=1e9+7;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    ll n;
+    cin>>n;
+    ll ans=0,l,r;
+    for(l=1;l<=n;l=r+1)
+    {
+        r=n/(n/l);
+        ans+=(r-l+1)*(n/l);
+    }
+    cout<<ans<<endl;
+    return 0;
+}
+//2.∑k%i，i=1~n
+/*
+k%i=k-ixfloor(k/i)，式子转化成n*k-∑i*floor(k/i)，考虑后面的求和式子，对于一段区间l,r，
+这一段的和为∑i*floor(k/i),i=l~r，即(l+r)*(r-l+1)/2*floor(k/i)
+*/
+#include<bits/stdc++.h>
+using namespace std;
+#define inf 0x3f3f3f3f
+#define ll long long
+const int N=200005;
+const int mod=1e9+7;
+const double eps=1e-8;
+const double PI = acos(-1.0);
+#define lowbit(x) (x&(-x))
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    ll n,k;
+    cin>>n>>k;
+    ll ans=0,l,r;
+    for(l=1;l<=n;l=r+1)
+    {
+        if(!(k/l))
+            break;
+        r=min(k/(k/l),n);
+        ans+=(l+r)*(r-l+1)/2*(k/l);
+    }
+    cout<<k*n-ans<<endl;
+    return 0;
+}
+
