@@ -1,3 +1,4 @@
-1.�й�ʣ�ඨ����CRT��:
-��m1,����mk���������ʵ�����������ô����a1,��,ak��˵��һ��ͬ�෽����x��ai(modmi)�����н�Ψһ��Ϊ x=��(1~k) Mi*ai*Mi^(-1)(mod m)m=m1*m2*��mk��Mi=m/mi��Mi^(-1)ΪMi����ģmi����.
-2.
+1.中国剩余定理（CRT）:
+设m1,…，mk是两两互质的正整数，那么对于a1,…,ak来说，一次同余方程组x≡ai(modmi)，必有解唯一解为 x=∑(1~k) Mi*ai*Mi^(-1)(mod m)m=m1*m2*…mk，Mi=m/mi，Mi^(-1)为Mi对于模mi的逆.
+2.逆元：
+a*b % p = 1,则b为a关于p的逆元，当p是质数时可以用费马小定理（a^(p-2)）求，当a和p互质时，可以用扩展gcd求
